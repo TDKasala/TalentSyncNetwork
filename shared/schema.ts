@@ -10,6 +10,7 @@ export const racialGroupEnum = pgEnum("racial_group", ["black", "white", "colour
 export const genderEnum = pgEnum("gender", ["male", "female", "non_binary", "other", "prefer_not_to_say"]);
 export const languageEnum = pgEnum("language", ["english", "afrikaans", "zulu"]);
 export const bbbeeEnum = pgEnum("bbbee_level", ["1", "2", "3", "4", "5", "6", "7", "8", "non_compliant"]);
+export const atsReferralActionEnum = pgEnum("ats_referral_action", ["optimize", "skip"]);
 
 // Users table
 export const users = pgTable("users", {
@@ -127,6 +128,17 @@ export const consents = pgTable("consents", {
   userAgent: text("user_agent"),
 });
 
+// ATS Referrals table for tracking CV optimization referrals
+export const atsReferrals = pgTable("ats_referrals", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  matchId: integer("match_id").references(() => matches.id).notNull(),
+  action: atsReferralActionEnum("action").notNull(),
+  timestamp: timestamp("timestamp").defaultNow().notNull(),
+  reminderSent: boolean("reminder_sent").default(false),
+  reminderTimestamp: timestamp("reminder_timestamp"),
+});
+
 // Create Zod schemas for inserts
 export const insertUserSchema = createInsertSchema(users).omit({ id: true, passwordHash: true, createdAt: true, lastLogin: true })
   .extend({
@@ -144,6 +156,7 @@ export const insertJobSchema = createInsertSchema(jobs).omit({ id: true, created
 export const insertMatchSchema = createInsertSchema(matches).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertTransactionSchema = createInsertSchema(transactions).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertConsentSchema = createInsertSchema(consents).omit({ id: true, givenAt: true });
+export const insertAtsReferralSchema = createInsertSchema(atsReferrals).omit({ id: true, timestamp: true, reminderSent: true, reminderTimestamp: true });
 
 // Define types based on the schemas
 export type User = typeof users.$inferSelect;
@@ -160,3 +173,5 @@ export type Transaction = typeof transactions.$inferSelect;
 export type InsertTransaction = z.infer<typeof insertTransactionSchema>;
 export type Consent = typeof consents.$inferSelect;
 export type InsertConsent = z.infer<typeof insertConsentSchema>;
+export type AtsReferral = typeof atsReferrals.$inferSelect;
+export type InsertAtsReferral = z.infer<typeof insertAtsReferralSchema>;

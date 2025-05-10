@@ -2,7 +2,7 @@ import {
   users, User, InsertUser, candidateProfiles, CandidateProfile, InsertCandidateProfile,
   companyProfiles, CompanyProfile, InsertCompanyProfile, jobs, Job, InsertJob,
   matches, Match, InsertMatch, transactions, Transaction, InsertTransaction,
-  consents, Consent, InsertConsent
+  consents, Consent, InsertConsent, atsReferrals, AtsReferral, InsertAtsReferral
 } from "@shared/schema";
 import { eq, and, inArray, like, desc, sql, or } from "drizzle-orm";
 import { createId } from '@paralleldrive/cuid2';
@@ -51,6 +51,13 @@ export interface IStorage {
   // Consent methods
   createConsent(consent: InsertConsent): Promise<Consent>;
   getConsentsByUser(userId: number): Promise<Consent[]>;
+  
+  // ATS Referral methods
+  createAtsReferral(referral: InsertAtsReferral): Promise<AtsReferral>;
+  getAtsReferralsByUser(userId: number): Promise<AtsReferral[]>;
+  getAtsReferralByMatchId(matchId: number): Promise<AtsReferral | undefined>;
+  updateAtsReferral(id: number, data: Partial<AtsReferral>): Promise<AtsReferral | undefined>;
+  getPendingAtsReminders(): Promise<AtsReferral[]>;
 }
 
 export class MemStorage implements IStorage {
@@ -61,12 +68,14 @@ export class MemStorage implements IStorage {
   private matches: Map<number, Match>;
   private transactions: Map<number, Transaction>;
   private consents: Map<number, Consent>;
+  private atsReferrals: Map<number, AtsReferral>;
   private currentUserId: number;
   private currentProfileId: number;
   private currentJobId: number;
   private currentMatchId: number;
   private currentTransactionId: number;
   private currentConsentId: number;
+  private currentAtsReferralId: number;
 
   constructor() {
     this.users = new Map();
