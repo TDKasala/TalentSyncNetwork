@@ -124,6 +124,10 @@ export class MemStorage implements IStorage {
     this.transactions = new Map();
     this.consents = new Map();
     this.atsReferrals = new Map();
+    this.skillAssessments = new Map();
+    this.assessmentQuestions = new Map();
+    this.assessmentAttempts = new Map();
+    this.skillBadges = new Map();
     this.currentUserId = 1;
     this.currentProfileId = 1;
     this.currentJobId = 1;
@@ -131,6 +135,10 @@ export class MemStorage implements IStorage {
     this.currentTransactionId = 1;
     this.currentConsentId = 1;
     this.currentAtsReferralId = 1;
+    this.currentSkillAssessmentId = 1;
+    this.currentAssessmentQuestionId = 1;
+    this.currentAssessmentAttemptId = 1;
+    this.currentSkillBadgeId = 1;
   }
 
   // User methods
@@ -470,6 +478,187 @@ export class MemStorage implements IStorage {
         !referral.reminderSent && 
         referral.timestamp < oneDayAgo
       );
+  }
+
+  // Skill Assessment methods
+  async getSkillAssessment(id: number): Promise<SkillAssessment | undefined> {
+    return this.skillAssessments.get(id);
+  }
+
+  async getSkillAssessmentsBySkill(skill: string): Promise<SkillAssessment[]> {
+    return Array.from(this.skillAssessments.values())
+      .filter(assessment => assessment.skill === skill && assessment.isActive);
+  }
+
+  async getActiveSkillAssessments(): Promise<SkillAssessment[]> {
+    return Array.from(this.skillAssessments.values())
+      .filter(assessment => assessment.isActive);
+  }
+
+  async createSkillAssessment(assessment: InsertSkillAssessment): Promise<SkillAssessment> {
+    const id = this.currentSkillAssessmentId++;
+    const now = new Date();
+    
+    const skillAssessment: SkillAssessment = {
+      id,
+      ...assessment,
+      createdAt: now,
+      updatedAt: null
+    };
+    
+    this.skillAssessments.set(id, skillAssessment);
+    return skillAssessment;
+  }
+
+  async updateSkillAssessment(id: number, data: Partial<SkillAssessment>): Promise<SkillAssessment | undefined> {
+    const assessment = this.skillAssessments.get(id);
+    
+    if (!assessment) {
+      return undefined;
+    }
+    
+    const updatedAssessment = { 
+      ...assessment, 
+      ...data,
+      updatedAt: new Date()
+    };
+    
+    this.skillAssessments.set(id, updatedAssessment);
+    return updatedAssessment;
+  }
+
+  // Assessment Question methods
+  async getAssessmentQuestions(assessmentId: number): Promise<AssessmentQuestion[]> {
+    return Array.from(this.assessmentQuestions.values())
+      .filter(question => question.assessmentId === assessmentId)
+      .sort((a, b) => a.order - b.order);
+  }
+
+  async createAssessmentQuestion(question: InsertAssessmentQuestion): Promise<AssessmentQuestion> {
+    const id = this.currentAssessmentQuestionId++;
+    const now = new Date();
+    
+    const assessmentQuestion: AssessmentQuestion = {
+      id,
+      ...question,
+      createdAt: now,
+      updatedAt: null
+    };
+    
+    this.assessmentQuestions.set(id, assessmentQuestion);
+    return assessmentQuestion;
+  }
+
+  async updateAssessmentQuestion(id: number, data: Partial<AssessmentQuestion>): Promise<AssessmentQuestion | undefined> {
+    const question = this.assessmentQuestions.get(id);
+    
+    if (!question) {
+      return undefined;
+    }
+    
+    const updatedQuestion = { 
+      ...question, 
+      ...data,
+      updatedAt: new Date()
+    };
+    
+    this.assessmentQuestions.set(id, updatedQuestion);
+    return updatedQuestion;
+  }
+
+  async deleteAssessmentQuestion(id: number): Promise<boolean> {
+    return this.assessmentQuestions.delete(id);
+  }
+
+  // Assessment Attempt methods
+  async getAssessmentAttempt(id: number): Promise<AssessmentAttempt | undefined> {
+    return this.assessmentAttempts.get(id);
+  }
+
+  async getUserAssessmentAttempts(userId: number): Promise<AssessmentAttempt[]> {
+    return Array.from(this.assessmentAttempts.values())
+      .filter(attempt => attempt.userId === userId)
+      .sort((a, b) => b.startedAt.getTime() - a.startedAt.getTime()); // Most recent first
+  }
+
+  async getUserAttemptsBySkill(userId: number, skill: string): Promise<AssessmentAttempt[]> {
+    // Get all attempts by this user
+    const userAttempts = await this.getUserAssessmentAttempts(userId);
+    
+    // Get all skill assessments for the specified skill
+    const skillAssessmentIds = Array.from(this.skillAssessments.values())
+      .filter(assessment => assessment.skill === skill)
+      .map(assessment => assessment.id);
+    
+    // Filter attempts to only those for the specified skill
+    return userAttempts.filter(attempt => skillAssessmentIds.includes(attempt.assessmentId));
+  }
+
+  async createAssessmentAttempt(attempt: InsertAssessmentAttempt): Promise<AssessmentAttempt> {
+    const id = this.currentAssessmentAttemptId++;
+    const now = new Date();
+    
+    const assessmentAttempt: AssessmentAttempt = {
+      id,
+      ...attempt,
+      startedAt: now,
+      verified: false,
+      badgeAwarded: false
+    };
+    
+    this.assessmentAttempts.set(id, assessmentAttempt);
+    return assessmentAttempt;
+  }
+
+  async updateAssessmentAttempt(id: number, data: Partial<AssessmentAttempt>): Promise<AssessmentAttempt | undefined> {
+    const attempt = this.assessmentAttempts.get(id);
+    
+    if (!attempt) {
+      return undefined;
+    }
+    
+    const updatedAttempt = { ...attempt, ...data };
+    this.assessmentAttempts.set(id, updatedAttempt);
+    return updatedAttempt;
+  }
+
+  // Skill Badge methods
+  async getUserSkillBadges(userId: number): Promise<SkillBadge[]> {
+    return Array.from(this.skillBadges.values())
+      .filter(badge => badge.userId === userId)
+      .sort((a, b) => b.earnedAt.getTime() - a.earnedAt.getTime()); // Most recent first
+  }
+
+  async createSkillBadge(badge: InsertSkillBadge): Promise<SkillBadge> {
+    const id = this.currentSkillBadgeId++;
+    const now = new Date();
+    
+    const skillBadge: SkillBadge = {
+      id,
+      ...badge,
+      earnedAt: now,
+      isVerified: true
+    };
+    
+    this.skillBadges.set(id, skillBadge);
+    return skillBadge;
+  }
+
+  async updateSkillBadge(id: number, data: Partial<SkillBadge>): Promise<SkillBadge | undefined> {
+    const badge = this.skillBadges.get(id);
+    
+    if (!badge) {
+      return undefined;
+    }
+    
+    const updatedBadge = { ...badge, ...data };
+    this.skillBadges.set(id, updatedBadge);
+    return updatedBadge;
+  }
+
+  async getSkillBadgeByAttempt(attemptId: number): Promise<SkillBadge | undefined> {
+    return Array.from(this.skillBadges.values())
+      .find(badge => badge.attemptId === attemptId);
   }
 }
 
@@ -824,6 +1013,168 @@ export class DatabaseStorage implements IStorage {
           sql`${atsReferrals.timestamp} < ${oneDayAgo}`
         )
       );
+  }
+  
+  // Skill Assessment methods
+  async getSkillAssessment(id: number): Promise<SkillAssessment | undefined> {
+    const results = await this.db.select().from(skillAssessments)
+      .where(eq(skillAssessments.id, id));
+    return results[0];
+  }
+
+  async getSkillAssessmentsBySkill(skill: string): Promise<SkillAssessment[]> {
+    return await this.db.select().from(skillAssessments)
+      .where(and(
+        eq(skillAssessments.skill, skill),
+        eq(skillAssessments.isActive, true)
+      ));
+  }
+
+  async getActiveSkillAssessments(): Promise<SkillAssessment[]> {
+    return await this.db.select().from(skillAssessments)
+      .where(eq(skillAssessments.isActive, true));
+  }
+
+  async createSkillAssessment(assessment: InsertSkillAssessment): Promise<SkillAssessment> {
+    const result = await this.db.insert(skillAssessments)
+      .values({
+        ...assessment,
+        createdAt: new Date(),
+        updatedAt: null
+      })
+      .returning();
+    return result[0];
+  }
+
+  async updateSkillAssessment(id: number, data: Partial<SkillAssessment>): Promise<SkillAssessment | undefined> {
+    const result = await this.db.update(skillAssessments)
+      .set({
+        ...data,
+        updatedAt: new Date()
+      })
+      .where(eq(skillAssessments.id, id))
+      .returning();
+    return result[0];
+  }
+
+  // Assessment Question methods
+  async getAssessmentQuestions(assessmentId: number): Promise<AssessmentQuestion[]> {
+    return await this.db.select().from(assessmentQuestions)
+      .where(eq(assessmentQuestions.assessmentId, assessmentId))
+      .orderBy(assessmentQuestions.order);
+  }
+
+  async createAssessmentQuestion(question: InsertAssessmentQuestion): Promise<AssessmentQuestion> {
+    const result = await this.db.insert(assessmentQuestions)
+      .values({
+        ...question,
+        createdAt: new Date(),
+        updatedAt: null
+      })
+      .returning();
+    return result[0];
+  }
+
+  async updateAssessmentQuestion(id: number, data: Partial<AssessmentQuestion>): Promise<AssessmentQuestion | undefined> {
+    const result = await this.db.update(assessmentQuestions)
+      .set({
+        ...data,
+        updatedAt: new Date()
+      })
+      .where(eq(assessmentQuestions.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async deleteAssessmentQuestion(id: number): Promise<boolean> {
+    const result = await this.db.delete(assessmentQuestions)
+      .where(eq(assessmentQuestions.id, id));
+    return result.rowCount > 0;
+  }
+
+  // Assessment Attempt methods
+  async getAssessmentAttempt(id: number): Promise<AssessmentAttempt | undefined> {
+    const results = await this.db.select().from(assessmentAttempts)
+      .where(eq(assessmentAttempts.id, id));
+    return results[0];
+  }
+
+  async getUserAssessmentAttempts(userId: number): Promise<AssessmentAttempt[]> {
+    return await this.db.select().from(assessmentAttempts)
+      .where(eq(assessmentAttempts.userId, userId))
+      .orderBy(desc(assessmentAttempts.startedAt));
+  }
+
+  async getUserAttemptsBySkill(userId: number, skill: string): Promise<AssessmentAttempt[]> {
+    // Find assessment IDs for the given skill
+    const assessments = await this.db.select().from(skillAssessments)
+      .where(eq(skillAssessments.skill, skill));
+    
+    if (assessments.length === 0) {
+      return [];
+    }
+    
+    const assessmentIds = assessments.map(a => a.id);
+    
+    // Get attempts for those assessments by this user
+    return await this.db.select().from(assessmentAttempts)
+      .where(and(
+        eq(assessmentAttempts.userId, userId),
+        inArray(assessmentAttempts.assessmentId, assessmentIds)
+      ))
+      .orderBy(desc(assessmentAttempts.startedAt));
+  }
+
+  async createAssessmentAttempt(attempt: InsertAssessmentAttempt): Promise<AssessmentAttempt> {
+    const result = await this.db.insert(assessmentAttempts)
+      .values({
+        ...attempt,
+        startedAt: new Date(),
+        verified: false,
+        badgeAwarded: false
+      })
+      .returning();
+    return result[0];
+  }
+
+  async updateAssessmentAttempt(id: number, data: Partial<AssessmentAttempt>): Promise<AssessmentAttempt | undefined> {
+    const result = await this.db.update(assessmentAttempts)
+      .set(data)
+      .where(eq(assessmentAttempts.id, id))
+      .returning();
+    return result[0];
+  }
+
+  // Skill Badge methods
+  async getUserSkillBadges(userId: number): Promise<SkillBadge[]> {
+    return await this.db.select().from(skillBadges)
+      .where(eq(skillBadges.userId, userId))
+      .orderBy(desc(skillBadges.earnedAt));
+  }
+
+  async createSkillBadge(badge: InsertSkillBadge): Promise<SkillBadge> {
+    const result = await this.db.insert(skillBadges)
+      .values({
+        ...badge,
+        earnedAt: new Date(),
+        isVerified: true
+      })
+      .returning();
+    return result[0];
+  }
+
+  async updateSkillBadge(id: number, data: Partial<SkillBadge>): Promise<SkillBadge | undefined> {
+    const result = await this.db.update(skillBadges)
+      .set(data)
+      .where(eq(skillBadges.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async getSkillBadgeByAttempt(attemptId: number): Promise<SkillBadge | undefined> {
+    const results = await this.db.select().from(skillBadges)
+      .where(eq(skillBadges.attemptId, attemptId));
+    return results[0];
   }
 }
 
