@@ -1,0 +1,250 @@
+Below is a revised, detailed prompt for an AI web builder to develop **TalentSyncZA** using **Option 1: Custom Development**, but replacing the original hosting and database choices with **Supabase** (for the database and backend services) and **Vercel** (for frontend and backend deployment). This prompt ensures the platform remains AI-driven, mobile-first, POPIA/B-BBEE compliant, and tailored for the South African recruitment market. It incorporates React.js, Node.js, Python for AI, Supabase, and Vercel, targeting a 16-week MVP timeline and a ZAR 100,000 budget.
+
+---
+
+### Prompt for AI Web Builder: Develop TalentSyncZA (Custom Development with Supabase and Vercel)
+
+**Objective**: Build **TalentSyncZA**, an AI-driven recruitment platform for South Africa, connecting job seekers and recruiters through private, skills-based matching. The platform must be mobile-first, comply with POPIA and B-BBEE regulations, and operate on a freemium model where users pay to unlock matches. Develop a scalable MVP using React.js (frontend), Node.js (backend), Python (AI), Supabase (database, auth, storage), and Vercel (deployment) within 16 weeks, with a budget of ZAR 100,000.
+
+**Platform Overview**:
+- **Purpose**: Allow candidates to post profiles and recruiters to post job descriptions, with AI matching them anonymously until a fee is paid to unlock communication.  
+- **Target Audience**:  
+  - Candidates: Job seekers (youth, gig workers, professionals) seeking fair opportunities.  
+  - Recruiters: SMBs, corporations, agencies needing compliant, efficient hiring.  
+- **Key Features**:  
+  - AI-powered skills-based matching with resume parsing.  
+  - Private matching (anonymous until fee paid).  
+  - B-BBEE compliance analytics for recruiters.  
+  - Mobile-first Progressive Web App (PWA) optimized for 3G networks.  
+  - Multilingual support (English, Afrikaans, Zulu).  
+  - POPIA-compliant data handling.  
+  - WhatsApp notifications and PayFast payments.  
+- **Business Model**: Freemium (free profile/job posting, paid match unlocks, premium subscriptions).  
+
+**Technical Requirements**:
+- **Frontend**: React.js (v18.x) for a responsive, mobile-first PWA.  
+  - Ensure <2s load times, <500KB/page for 3G networks.  
+  - Use Tailwind CSS for UI components (lightweight, customizable).  
+  - Implement PWA features (offline access, push notifications via Vercel).  
+  - Deploy on Vercel for automatic scaling and domain management.  
+- **Backend**: Node.js (v20.x) with Express.js for RESTful APIs.  
+  - Handle user authentication, profile management, job postings, payments, and analytics.  
+  - Use Supabase Authentication for JWT-based user management.  
+  - Deploy on Vercel Serverless Functions for scalability.  
+- **Database**: Supabase (PostgreSQL-based) for structured storage of profiles, jobs, matches, and transactions.  
+  - Schema: Users (candidates/recruiters), Jobs, Matches, Transactions, Consents (for POPIA).  
+  - Use Supabase real-time subscriptions for match notifications.  
+  - Enable Row-Level Security (RLS) for POPIA compliance.  
+- **Storage**: Supabase Storage for resume uploads (PDFs).  
+  - Restrict access to authenticated users and enforce file size limits (e.g., 5MB).  
+- **AI/ML**: Python (v3.11) with TensorFlow (v2.16) or PyTorch (v2.4) for matching algorithms.  
+  - Use Hugging Face Transformers (BERT-based) for resume parsing.  
+  - Host AI scripts on Vercel Serverless Functions or AWS Lambda (if compute-intensive).  
+- **Payments**: PayFast API for ZAR transactions.  
+- **Notifications**: WhatsApp Business API for real-time, low-cost alerts.  
+- **Security**:  
+  - SSL/TLS via Vercel (automatic HTTPS).  
+  - AES-256 encryption for sensitive data (e.g., resumes) in Supabase Storage.  
+  - POPIA compliance: User consent, data minimization, South Africa-based Supabase instance (or proxy via AWS Cape Town).  
+- **Hosting**:  
+  - **Vercel**: Deploy frontend (React.js) and backend (Node.js APIs) for automatic scaling, domain management, and CI/CD.  
+  - **Supabase**: Host database, authentication, and storage (use South Africa-friendly region or AWS Cape Town for POPIA).  
+- **Dev Tools**:  
+  - Git/GitHub for version control.  
+  - ESLint/Prettier for code quality.  
+  - Jest for React component testing.  
+  - Supabase CLI for database migrations.  
+  - Vercel CLI for deployments.  
+  - Postman for API testing.  
+
+**Feature Specifications**:
+1. **Candidate Portal**:
+   - **UI**: Mobile-first interface with form for name, skills, experience, education, portfolio links, and resume upload (PDF).  
+   - **Functionality**:  
+     - Create/edit profile with multilingual input (English, Afrikaans, Zulu).  
+     - View AI-recommended jobs (anonymized until unlocked).  
+     - Pay to unlock recruiter contact via PayFast.  
+     - Receive WhatsApp notifications for matches (Supabase real-time).  
+   - **Tech**: React.js form with validation, Supabase Auth for user management, Supabase Storage for resumes, PayFast API.  
+
+2. **Recruiter Portal**:
+   - **UI**: Dashboard with job posting form (title, description, skills, location, salary) and B-BBEE analytics (diversity metrics).  
+   - **Functionality**:  
+     - Post/edit jobs with B-BBEE filters (e.g., prioritize designated groups).  
+     - View AI-matched candidates (anonymized until unlocked).  
+     - Pay to unlock candidate contact.  
+     - Export B-BBEE reports (CSV).  
+   - **Tech**: React.js dashboard, Supabase for job storage, Node.js API on Vercel for analytics, Chart.js for visualizations.  
+
+3. **AI Matching System**:
+   - **Logic**: Parse resumes (PDF) using Hugging Face BERT to extract skills, experience, qualifications. Match candidates to jobs (skills: 80%, location: 10%, experience: 10%).  
+   - **Privacy**: Keep matches anonymous until payment.  
+   - **Output**: Ranked match list with confidence scores (e.g., 92%).  
+   - **Tech**: Python script on Vercel Serverless (or AWS Lambda for heavy compute), Supabase for match storage.  
+
+4. **B-BBEE Compliance Analytics**:
+   - **Functionality**: Track hiring diversity (race, gender) per B-BBEE codes. Display metrics in dashboard (charts).  
+   - **Tech**: Node.js on Vercel for analytics, Chart.js for visuals, Supabase for data.  
+
+5. **Payment System**:
+   - **Functionality**: Freemium model.  
+     - Candidate: ZAR 50/match unlock.  
+     - Recruiter: ZAR 100/match unlock or ZAR 500/month for unlimited.  
+   - **Tech**: PayFast API, Node.js on Vercel for transaction logic, Supabase for records.  
+
+6. **Notifications**:
+   - **Functionality**: Send WhatsApp alerts for matches, payments, and updates.  
+   - **Tech**: WhatsApp Business API, Node.js on Vercel for triggers, Supabase real-time for events.  
+
+7. **POPIA Compliance**:
+   - **Functionality**:  
+     - Consent checkboxes for data processing.  
+     - Data deletion option in settings.  
+     - Store data in Supabase (South Africa-compliant region or AWS Cape Town).  
+   - **Tech**: Supabase RLS for access control, Node.js for consent logic, Supabase for consent logs.  
+
+**Development Plan (16 Weeks)**:
+1. **Weeks 1-3: Project Setup & Design**  
+   - **Tasks**:  
+     - Initialize GitHub repo, set up React.js (Vercel), Node.js (Vercel), Supabase project.  
+     - Configure Supabase Auth, Database, and Storage (Users, Jobs, Matches, Transactions, Consents).  
+     - Design UI/UX in Figma: candidate portal (profile form, job list), recruiter portal (job form, dashboard), match unlock page.  
+     - Set up Vercel CLI, Supabase CLI, ESLint, Prettier, Jest.  
+   - **Output**: Project scaffold, Supabase schema, UI mockups, Vercel deployment pipeline.  
+   - **Cost**: ZAR 10,000 (Vercel Pro plan, Supabase Pro plan, Figma, domain).  
+
+2. **Weeks 4-7: Backend Development**  
+   - **Tasks**:  
+     - Build RESTful APIs on Vercel (POST /users, GET /jobs, POST /matches).  
+     - Implement Supabase Auth (JWT) for login/signup.  
+     - Integrate PayFast API for payments.  
+     - Set up WhatsApp Business API for notifications.  
+     - Configure Supabase RLS for POPIA (e.g., restrict resume access).  
+     - Write unit tests with Jest.  
+   - **Output**: Functional backend APIs, authentication, payments, notifications.  
+   - **Cost**: ZAR 30,000 (backend developer, ~80 hours @ ZAR 500/hour).  
+
+3. **Weeks 8-11: Frontend Development**  
+   - **Tasks**:  
+     - Build React.js PWA with Tailwind CSS.  
+     - Implement candidate portal (profile form, job list).  
+     - Implement recruiter portal (job form, B-BBEE dashboard).  
+     - Add PWA features (offline access, push notifications via Vercel).  
+     - Optimize for 3G (<2s load, <500KB/page).  
+     - Write UI tests with Jest.  
+     - Deploy frontend on Vercel.  
+   - **Output**: Responsive, mobile-first frontend on Vercel.  
+   - **Cost**: ZAR 25,000 (frontend developer, ~60 hours @ ZAR 500/hour).  
+
+4. **Weeks 12-14: AI Integration**  
+   - **Tasks**:  
+     - Develop Python script for resume parsing (Hugging Face BERT).  
+     - Build matching algorithm (skills: 80%, location: 10%, experience: 10%).  
+     - Host AI on Vercel Serverless Functions (or AWS Lambda if compute-intensive).  
+     - Connect AI to Supabase via API for match storage.  
+     - Test matching accuracy with sample resumes (>85% precision).  
+   - **Output**: Functional AI matching system.  
+   - **Cost**: ZAR 20,000 (AI/ML developer, ~50 hours @ ZAR 500/hour).  
+
+5. **Weeks 15-16: Testing & Launch**  
+   - **Tasks**:  
+     - Conduct end-to-end testing (APIs, UI, AI, payments).  
+     - Beta test with 100 users (50 candidates, 50 recruiters) in Johannesburg/Cape Town.  
+     - Fix bugs and optimize performance (Vercel analytics for insights).  
+     - Deploy final app on Vercel and Supabase.  
+     - Create SEO-optimized landing page (React.js on Vercel).  
+     - Launch with social media campaign (X, LinkedIn) targeting ATS optimization and B-BBEE benefits.  
+   - **Output**: Live MVP, beta feedback, marketing assets.  
+   - **Cost**: ZAR 15,000 (QA, marketing).  
+
+**Budget Breakdown**:
+- Setup: ZAR 10,000 (Vercel Pro ~$20/month, Supabase Pro ~$25/month, domain, Figma).  
+- Backend: ZAR 30,000 (developer).  
+- Frontend: ZAR 25,000 (developer).  
+- AI: ZAR 20,000 (developer).  
+- Testing/Launch: ZAR 15,000 (QA, marketing).  
+- **Total**: ZAR 100,000.  
+
+**Success Metrics**:
+- **Technical**:  
+  - <2s page load on 3G (Vercel optimization).  
+  - >85% AI match accuracy.  
+  - 100% POPIA compliance (Supabase RLS audit).  
+- **User**:  
+  - 100 beta users by Week 16.  
+  - 80% user satisfaction in beta feedback.  
+- **Business**:  
+  - 50 paid match unlocks in first month post-launch.  
+  - ZAR 10,000 revenue in first month.  
+
+**Constraints**:
+- Budget: ZAR 100,000 max.  
+- Timeline: 16 weeks for MVP.  
+- Team: Assume 1-2 freelance developers (backend, frontend/AI) or self-managed with AI tools.  
+- Market: South Africa (prioritize Johannesburg, Cape Town).  
+- POPIA: Use Supabase’s South Africa-compliant region or AWS Cape Town proxy.  
+
+**Additional Notes**:
+- Leverage Supabase’s free tier initially (500MB storage, 10,000 rows) to reduce costs, upgrading to Pro (~ZAR 500/month) for beta testing.  
+- Use Vercel’s free tier for development, upgrading to Pro (~ZAR 400/month) for custom domain and analytics.  
+- Optimize AI scripts for Vercel’s 50MB function limit; use AWS Lambda if resume parsing exceeds compute capacity.  
+- Include error handling (e.g., failed payments, invalid resumes).  
+- Document code and APIs (Swagger) for scaling.  
+- Use open-source libraries (Hugging Face, Chart.js) to minimize costs.  
+
+**Deliverables**:
+- Source code in GitHub repo (React.js, Node.js, Python).  
+- Deployed MVP on Vercel (frontend/backend) and Supabase (database/storage).  
+- Figma UI mockups.  
+- API documentation (Swagger/Postman).  
+- Beta test report (100 users).  
+- SEO-optimized landing page on Vercel.  
+
+**AI Web Builder Instructions**:
+- Generate modular code for each phase (setup, backend, frontend, AI, testing).  
+- Provide checkpoints after each phase (e.g., Supabase schema, Vercel API deployment).  
+- Suggest optimizations for 3G performance (e.g., lazy loading in React) and POPIA compliance (e.g., Supabase RLS policies).  
+- If errors occur, debug and propose fixes (e.g., Vercel timeout, Supabase RLS issues).  
+- Simulate beta testing with dummy data (100 users) to validate functionality.  
+
+**Example User Flow**:
+1. Candidate signs up via Supabase Auth, uploads resume to Supabase Storage, lists skills (e.g., “Python, Johannesburg”).  
+2. Recruiter posts job on Vercel API (e.g., “Software Engineer, B-BBEE Level 2”).  
+3. AI (Vercel Serverless) parses resume, matches candidate to job (90% score), stores match in Supabase.  
+4. Supabase real-time notifies both via WhatsApp.  
+5. Recruiter pays ZAR 100 via PayFast to unlock contact details.  
+6. Recruiter views B-BBEE dashboard (Chart.js) to confirm compliance.  
+
+**Start Now**:
+- Initialize GitHub repo and Vercel project.  
+- Set up Supabase project (Auth, Database, Storage) with initial schema (Users, Jobs).  
+- Generate Figma UI for candidate portal (profile form) as first deliverable.  
+- Provide code for Supabase schema and Vercel API (POST /users) by Week 1.  
+
+---
+
+### Why Supabase and Vercel?
+- **Supabase**:  
+  - PostgreSQL-based, open-source, with built-in Auth, Storage, and real-time features, reducing backend complexity.  
+  - Row-Level Security ensures POPIA compliance.  
+  - Free tier (500MB storage) suits early development; Pro plan (~ZAR 500/month) scales for beta.  
+  - South Africa-compliant hosting (or AWS Cape Town proxy) meets POPIA.  
+- **Vercel**:  
+  - Simplifies React.js and Node.js deployment with automatic scaling and CI/CD.  
+  - Free tier for development; Pro plan (~ZAR 400/month) adds analytics and custom domain.  
+  - Optimizes for 3G with edge caching, ideal for South African users.  
+  - Serverless Functions support lightweight AI tasks.  
+
+### Notes on Prompt Usage
+- This prompt is tailored for an AI web builder with code generation (e.g., Cursor, GitHub Copilot). Break into phases (e.g., Supabase setup, Vercel frontend) if the builder has limited scope.  
+- For freelancers, use this as a project brief to align expectations.  
+- Supabase’s South Africa region may require AWS Cape Town for strict POPIA compliance; configure accordingly.  
+- If AI scripts exceed Vercel’s 50MB limit, use AWS Lambda and provide API integration code.  
+
+### Next Steps
+- Confirm Supabase and Vercel account setup (free tiers to start).  
+- Share the prompt with your AI web builder or freelancers.  
+- Request specific outputs (e.g., “Generate React component for profile form” or “Write Supabase RLS policy for resumes”).  
+- Validate market demand with 50 SMBs and 100 job seekers in Johannesburg.  
+
+If you need help with Supabase schema design, Vercel deployment scripts, sample React components, or a marketing plan, let me know!
