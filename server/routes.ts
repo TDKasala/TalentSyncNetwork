@@ -643,6 +643,166 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // ATS Referrals routes
+  app.post('/api/ats-referrals', authenticate, async (req, res) => {
+    const user = req.user;
+    
+    try {
+      const validatedData = insertAtsReferralSchema.parse(req.body);
+      
+      // Check if the user is authorized to create a referral for this match
+      const match = await storage.getMatch(validatedData.matchId);
+      
+      if (!match) {
+        return res.status(404).json({ message: 'Match not found' });
+      }
+      
+      // Check if this user can create a referral for this match
+      if (match.candidateId !== validatedData.userId && match.recruiterId !== validatedData.userId) {
+        return res.status(403).json({ message: 'Not authorized to create referral for this match' });
+      }
+      
+      // Check if a referral already exists for this match
+      const existingReferral = await storage.getAtsReferralByMatchId(validatedData.matchId);
+      
+      if (existingReferral) {
+        // Update existing referral
+        const updatedReferral = await storage.updateAtsReferral(existingReferral.id, {
+          action: validatedData.action,
+          timestamp: new Date(),
+          reminderSent: false,
+          reminderTimestamp: null
+        });
+        
+        return res.json(updatedReferral);
+      }
+      
+      // Create new referral
+      const newReferral = await storage.createAtsReferral(validatedData);
+      
+      res.status(201).json(newReferral);
+    } catch (error) {
+      console.error('Error creating ATS referral:', error);
+      
+      if (error.name === 'ZodError') {
+        return res.status(400).json({ message: 'Invalid referral data', errors: error.errors });
+      }
+      
+      res.status(500).json({ message: 'Server error creating ATS referral' });
+    }
+  });
+  
+  app.get('/api/ats-referrals/user/:userId', authenticate, async (req, res) => {
+    const user = req.user;
+    const userId = parseInt(req.params.userId);
+    
+    // Make sure users can only access their own referrals
+    if (user.id !== userId) {
+      return res.status(403).json({ message: 'Not authorized to access these referrals' });
+    }
+    
+    try {
+      const referrals = await storage.getAtsReferralsByUser(userId);
+      res.json(referrals);
+    } catch (error) {
+      console.error('Error fetching ATS referrals:', error);
+      res.status(500).json({ message: 'Server error fetching ATS referrals' });
+    }
+  });
+  
+  app.get('/api/ats-referrals/match/:matchId', authenticate, async (req, res) => {
+    const matchId = parseInt(req.params.matchId);
+    const user = req.user;
+    
+    try {
+      // Check if the user is authorized to access this match
+      const match = await storage.getMatch(matchId);
+      
+      if (!match) {
+        return res.status(404).json({ message: 'Match not found' });
+      }
+      
+      if (match.candidateId !== user.id && match.recruiterId !== user.id) {
+        return res.status(403).json({ message: 'Not authorized to access this match' });
+      }
+      
+      const referral = await storage.getAtsReferralByMatchId(matchId);
+      
+      if (!referral) {
+        return res.status(404).json({ message: 'No ATS referral found for this match' });
+      }
+      
+      res.json(referral);
+    } catch (error) {
+      console.error('Error fetching ATS referral for match:', error);
+      res.status(500).json({ message: 'Server error fetching ATS referral' });
+    }
+  });
+  
+  // API endpoint to process reminders for skipped ATS referrals
+  app.get('/api/ats-referrals/process-reminders', async (req, res) => {
+    // This endpoint should be secured in production with an API key or similar
+    // For now, we'll leave it open for testing purposes
+    
+    try {
+      // Get all pending reminders
+      const pendingReminders = await storage.getPendingAtsReminders();
+      
+      if (pendingReminders.length === 0) {
+        return res.json({ message: 'No pending reminders found', count: 0 });
+      }
+      
+      // Array to track processed reminders
+      const processed = [];
+      
+      // Process each reminder
+      for (const referral of pendingReminders) {
+        try {
+          // In a real app, you would send a WhatsApp message here
+          // For now, we'll just mark it as sent
+          
+          // Get user details for the reminder
+          const user = await storage.getUser(referral.userId);
+          const match = await storage.getMatch(referral.matchId);
+          
+          if (!user || !match) {
+            console.error(`User or match not found for referral ${referral.id}`);
+            continue;
+          }
+          
+          console.log(`Sending WhatsApp reminder to user ${user.id} about match ${match.id}`);
+          
+          // Example WhatsApp integration code (commented out):
+          /*
+          const whatsappMessage = `Hi ${user.firstName}, we noticed you skipped the CV optimization for your recent job match. 
+          Optimizing your CV can increase your chances by 70%! Visit https://atsboost.co.za/?ref=talentsyncza&matchId=${match.id} to optimize now.`;
+          
+          // Call WhatsApp API here
+          */
+          
+          // Update the referral to mark the reminder as sent
+          const updatedReferral = await storage.updateAtsReferral(referral.id, {
+            reminderSent: true,
+            reminderTimestamp: new Date()
+          });
+          
+          processed.push(updatedReferral);
+        } catch (error) {
+          console.error(`Error processing reminder for referral ${referral.id}:`, error);
+        }
+      }
+      
+      res.json({ 
+        message: `Processed ${processed.length} reminders`, 
+        count: processed.length,
+        processed 
+      });
+    } catch (error) {
+      console.error('Error processing ATS reminders:', error);
+      res.status(500).json({ message: 'Server error processing reminders' });
+    }
+  });
+  
   // Analytics routes
   app.get('/api/analytics/bbbee', authenticate, async (req, res) => {
     const user = req.user;

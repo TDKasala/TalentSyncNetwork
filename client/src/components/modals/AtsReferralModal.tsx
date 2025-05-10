@@ -20,21 +20,22 @@ interface AtsReferralModalProps {
 }
 
 export function AtsReferralModal({ isOpen, onClose, match }: AtsReferralModalProps) {
-  const { t } = useTranslation();
+  const { t } = useLanguage();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleOptimize = async () => {
     setIsSubmitting(true);
     try {
-      await apiRequest(`/api/ats-referrals`, {
-        method: 'POST',
-        data: {
+      await apiRequest(
+        'POST',
+        '/api/ats-referrals',
+        {
           userId: match.candidateId,
           matchId: match.id,
           action: 'optimize',
-        },
-      });
+        }
+      );
 
       // Redirect to ATSBoost.co.za with user data
       window.location.href = `https://atsboost.co.za/?ref=talentsyncza&matchId=${match.id}`;
@@ -54,14 +55,15 @@ export function AtsReferralModal({ isOpen, onClose, match }: AtsReferralModalPro
   const handleSkip = async () => {
     setIsSubmitting(true);
     try {
-      await apiRequest(`/api/ats-referrals`, {
-        method: 'POST',
-        data: {
+      await apiRequest(
+        'POST',
+        '/api/ats-referrals',
+        {
           userId: match.candidateId,
           matchId: match.id,
           action: 'skip',
-        },
-      });
+        }
+      );
 
       toast({
         title: t('Noted'),
