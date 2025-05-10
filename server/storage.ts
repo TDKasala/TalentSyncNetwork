@@ -2,7 +2,11 @@ import {
   users, User, InsertUser, candidateProfiles, CandidateProfile, InsertCandidateProfile,
   companyProfiles, CompanyProfile, InsertCompanyProfile, jobs, Job, InsertJob,
   matches, Match, InsertMatch, transactions, Transaction, InsertTransaction,
-  consents, Consent, InsertConsent, atsReferrals, AtsReferral, InsertAtsReferral
+  consents, Consent, InsertConsent, atsReferrals, AtsReferral, InsertAtsReferral,
+  skillAssessments, SkillAssessment, InsertSkillAssessment,
+  assessmentQuestions, AssessmentQuestion, InsertAssessmentQuestion,
+  assessmentAttempts, AssessmentAttempt, InsertAssessmentAttempt,
+  skillBadges, SkillBadge, InsertSkillBadge
 } from "@shared/schema";
 import { eq, and, inArray, like, desc, sql, or } from "drizzle-orm";
 import { createId } from '@paralleldrive/cuid2';
@@ -58,6 +62,32 @@ export interface IStorage {
   getAtsReferralByMatchId(matchId: number): Promise<AtsReferral | undefined>;
   updateAtsReferral(id: number, data: Partial<AtsReferral>): Promise<AtsReferral | undefined>;
   getPendingAtsReminders(): Promise<AtsReferral[]>;
+  
+  // Skill Assessment methods
+  getSkillAssessment(id: number): Promise<SkillAssessment | undefined>;
+  getSkillAssessmentsBySkill(skill: string): Promise<SkillAssessment[]>;
+  getActiveSkillAssessments(): Promise<SkillAssessment[]>;
+  createSkillAssessment(assessment: InsertSkillAssessment): Promise<SkillAssessment>;
+  updateSkillAssessment(id: number, data: Partial<SkillAssessment>): Promise<SkillAssessment | undefined>;
+  
+  // Assessment Question methods
+  getAssessmentQuestions(assessmentId: number): Promise<AssessmentQuestion[]>;
+  createAssessmentQuestion(question: InsertAssessmentQuestion): Promise<AssessmentQuestion>;
+  updateAssessmentQuestion(id: number, data: Partial<AssessmentQuestion>): Promise<AssessmentQuestion | undefined>;
+  deleteAssessmentQuestion(id: number): Promise<boolean>;
+  
+  // Assessment Attempt methods
+  getAssessmentAttempt(id: number): Promise<AssessmentAttempt | undefined>;
+  getUserAssessmentAttempts(userId: number): Promise<AssessmentAttempt[]>;
+  getUserAttemptsBySkill(userId: number, skill: string): Promise<AssessmentAttempt[]>;
+  createAssessmentAttempt(attempt: InsertAssessmentAttempt): Promise<AssessmentAttempt>;
+  updateAssessmentAttempt(id: number, data: Partial<AssessmentAttempt>): Promise<AssessmentAttempt | undefined>;
+  
+  // Skill Badge methods
+  getUserSkillBadges(userId: number): Promise<SkillBadge[]>;
+  createSkillBadge(badge: InsertSkillBadge): Promise<SkillBadge>;
+  updateSkillBadge(id: number, data: Partial<SkillBadge>): Promise<SkillBadge | undefined>;
+  getSkillBadgeByAttempt(attemptId: number): Promise<SkillBadge | undefined>;
 }
 
 export class MemStorage implements IStorage {
@@ -69,6 +99,10 @@ export class MemStorage implements IStorage {
   private transactions: Map<number, Transaction>;
   private consents: Map<number, Consent>;
   private atsReferrals: Map<number, AtsReferral>;
+  private skillAssessments: Map<number, SkillAssessment>;
+  private assessmentQuestions: Map<number, AssessmentQuestion>;
+  private assessmentAttempts: Map<number, AssessmentAttempt>;
+  private skillBadges: Map<number, SkillBadge>;
   private currentUserId: number;
   private currentProfileId: number;
   private currentJobId: number;
@@ -76,6 +110,10 @@ export class MemStorage implements IStorage {
   private currentTransactionId: number;
   private currentConsentId: number;
   private currentAtsReferralId: number;
+  private currentSkillAssessmentId: number;
+  private currentAssessmentQuestionId: number;
+  private currentAssessmentAttemptId: number;
+  private currentSkillBadgeId: number;
 
   constructor() {
     this.users = new Map();

@@ -11,6 +11,8 @@ export const genderEnum = pgEnum("gender", ["male", "female", "non_binary", "oth
 export const languageEnum = pgEnum("language", ["english", "afrikaans", "zulu"]);
 export const bbbeeEnum = pgEnum("bbbee_level", ["1", "2", "3", "4", "5", "6", "7", "8", "non_compliant"]);
 export const atsReferralActionEnum = pgEnum("ats_referral_action", ["optimize", "skip"]);
+export const skillLevelEnum = pgEnum("skill_level", ["beginner", "intermediate", "advanced", "expert"]);
+export const assessmentTypeEnum = pgEnum("assessment_type", ["quiz", "coding", "text"]);
 
 // Users table
 export const users = pgTable("users", {
@@ -139,6 +141,62 @@ export const atsReferrals = pgTable("ats_referrals", {
   reminderTimestamp: timestamp("reminder_timestamp"),
 });
 
+// Skills Assessments
+export const skillAssessments = pgTable("skill_assessments", {
+  id: serial("id").primaryKey(),
+  title: text("title").notNull(),
+  skill: text("skill").notNull(),
+  description: text("description").notNull(),
+  type: assessmentTypeEnum("type").default("quiz").notNull(),
+  difficulty: skillLevelEnum("difficulty").default("intermediate").notNull(),
+  timeLimit: integer("time_limit_minutes"), // in minutes, null means no time limit
+  passingScore: integer("passing_score").default(70).notNull(), // percentage needed to pass
+  isActive: boolean("is_active").default(true).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at"),
+});
+
+// Assessment Questions
+export const assessmentQuestions = pgTable("assessment_questions", {
+  id: serial("id").primaryKey(),
+  assessmentId: integer("assessment_id").references(() => skillAssessments.id).notNull(),
+  questionText: text("question_text").notNull(),
+  options: json("options"), // JSON array of options for multiple choice
+  correctAnswer: text("correct_answer").notNull(),
+  explanation: text("explanation"),
+  points: integer("points").default(1).notNull(),
+  order: integer("order").default(0).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at"),
+});
+
+// Candidate Assessment Attempts
+export const assessmentAttempts = pgTable("assessment_attempts", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  assessmentId: integer("assessment_id").references(() => skillAssessments.id).notNull(),
+  startedAt: timestamp("started_at").defaultNow().notNull(),
+  completedAt: timestamp("completed_at"),
+  score: integer("score"), // percentage score
+  passed: boolean("passed"),
+  answers: json("answers"), // stored answers for review
+  timeSpent: integer("time_spent_seconds"),
+  verified: boolean("verified").default(false).notNull(),
+  badgeAwarded: boolean("badge_awarded").default(false).notNull(),
+});
+
+// Candidate Skill Badges
+export const skillBadges = pgTable("skill_badges", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  skill: text("skill").notNull(),
+  level: skillLevelEnum("level").notNull(),
+  earnedAt: timestamp("earned_at").defaultNow().notNull(),
+  expiresAt: timestamp("expires_at"), // optional expiration date
+  attemptId: integer("attempt_id").references(() => assessmentAttempts.id),
+  isVerified: boolean("is_verified").default(true).notNull(),
+});
+
 // Create Zod schemas for inserts
 export const insertUserSchema = createInsertSchema(users).omit({ id: true, passwordHash: true, createdAt: true, lastLogin: true })
   .extend({
@@ -158,6 +216,12 @@ export const insertTransactionSchema = createInsertSchema(transactions).omit({ i
 export const insertConsentSchema = createInsertSchema(consents).omit({ id: true, givenAt: true });
 export const insertAtsReferralSchema = createInsertSchema(atsReferrals).omit({ id: true, timestamp: true, reminderSent: true, reminderTimestamp: true });
 
+// Skills Assessment Schemas
+export const insertSkillAssessmentSchema = createInsertSchema(skillAssessments).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertAssessmentQuestionSchema = createInsertSchema(assessmentQuestions).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertAssessmentAttemptSchema = createInsertSchema(assessmentAttempts).omit({ id: true, startedAt: true });
+export const insertSkillBadgeSchema = createInsertSchema(skillBadges).omit({ id: true, earnedAt: true });
+
 // Define types based on the schemas
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -175,3 +239,13 @@ export type Consent = typeof consents.$inferSelect;
 export type InsertConsent = z.infer<typeof insertConsentSchema>;
 export type AtsReferral = typeof atsReferrals.$inferSelect;
 export type InsertAtsReferral = z.infer<typeof insertAtsReferralSchema>;
+
+// Skills Assessment Types
+export type SkillAssessment = typeof skillAssessments.$inferSelect;
+export type InsertSkillAssessment = z.infer<typeof insertSkillAssessmentSchema>;
+export type AssessmentQuestion = typeof assessmentQuestions.$inferSelect;
+export type InsertAssessmentQuestion = z.infer<typeof insertAssessmentQuestionSchema>;
+export type AssessmentAttempt = typeof assessmentAttempts.$inferSelect;
+export type InsertAssessmentAttempt = z.infer<typeof insertAssessmentAttemptSchema>;
+export type SkillBadge = typeof skillBadges.$inferSelect;
+export type InsertSkillBadge = z.infer<typeof insertSkillBadgeSchema>;
