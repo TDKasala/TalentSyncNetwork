@@ -506,6 +506,80 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Endpoint to get a specific match by ID
+  app.get('/api/matches/:id', authenticate, async (req, res) => {
+    const matchId = parseInt(req.params.id);
+    const user = req.user;
+    
+    if (isNaN(matchId)) {
+      return res.status(400).json({ message: 'Invalid match ID' });
+    }
+    
+    try {
+      const match = await storage.getMatch(matchId);
+      
+      if (!match) {
+        return res.status(404).json({ message: 'Match not found' });
+      }
+      
+      // Check if the user is authorized to access this match
+      if (user.id !== match.candidateId && user.id !== match.recruiterId) {
+        return res.status(403).json({ message: 'Not authorized to access this match' });
+      }
+      
+      // Fetch job details to include with the match
+      const job = await storage.getJob(match.jobId);
+      
+      // Fetch user details based on role
+      let details = {};
+      
+      if (user.role === 'candidate') {
+        const recruiter = await storage.getUser(match.recruiterId);
+        
+        // If unlocked, include recruiter details
+        if (match.unlockedByCandidate) {
+          const company = await storage.getCompanyProfile(match.recruiterId);
+          details = {
+            recruiter: recruiter ? {
+              id: recruiter.id,
+              firstName: recruiter.firstName,
+              lastName: recruiter.lastName,
+              email: recruiter.email,
+              whatsappNumber: recruiter.whatsappNumber
+            } : null,
+            company: company || null
+          };
+        }
+      } else {
+        const candidate = await storage.getUser(match.candidateId);
+        
+        // If unlocked, include candidate details
+        if (match.unlockedByRecruiter) {
+          const candidateProfile = await storage.getCandidateProfile(match.candidateId);
+          details = {
+            candidate: candidate ? {
+              id: candidate.id,
+              firstName: candidate.firstName,
+              lastName: candidate.lastName,
+              email: candidate.email,
+              whatsappNumber: candidate.whatsappNumber
+            } : null,
+            profile: candidateProfile || null
+          };
+        }
+      }
+      
+      res.json({
+        ...match,
+        job: job || { title: 'Unknown Job' },
+        ...details
+      });
+    } catch (error) {
+      console.error('Error fetching match:', error);
+      res.status(500).json({ message: 'Server error fetching match details' });
+    }
+  });
+  
   app.post('/api/matches/unlock/:id', authenticate, async (req, res) => {
     const user = req.user;
     const matchId = parseInt(req.params.id);
@@ -556,7 +630,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         `${process.env.APP_URL || 'http://localhost:5000'}/dashboard/payment/cancel`
       );
       
-      res.json({ paymentUrl, transactionId });
+      // Include the matchId in the response for client-side storage
+      res.json({ paymentUrl, transactionId, matchId });
     } catch (error) {
       console.error(error);
       res.status(500).json({ message: 'Server error processing match unlock' });

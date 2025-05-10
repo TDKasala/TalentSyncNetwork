@@ -11,6 +11,8 @@ import Register from "@/pages/auth/register";
 import CandidateDashboard from "@/pages/dashboard/candidate";
 import RecruiterDashboard from "@/pages/dashboard/recruiter";
 import JobsPage from "@/pages/jobs";
+import PaymentSuccessPage from "@/pages/dashboard/payment/success";
+import PaymentCancelPage from "@/pages/dashboard/payment/cancel";
 import { useUser } from "@/hooks/useUser";
 
 function Router() {
@@ -53,6 +55,14 @@ function Router() {
       </Route>
       <Route path="/dashboard/recruiter">
         {() => <ProtectedRoute component={RecruiterDashboard} role="recruiter" />}
+      </Route>
+      
+      {/* Payment routes - need protection but should allow either candidate or recruiter roles */}
+      <Route path="/dashboard/payment/success">
+        {() => <ProtectedRoute component={PaymentSuccessPage} />}
+      </Route>
+      <Route path="/dashboard/payment/cancel">
+        {() => <ProtectedRoute component={PaymentCancelPage} />}
       </Route>
       
       {/* Fallback to 404 */}
