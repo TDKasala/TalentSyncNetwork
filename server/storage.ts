@@ -733,6 +733,60 @@ export class DatabaseStorage implements IStorage {
       .where(eq(consents.userId, userId))
       .orderBy(desc(consents.givenAt));
   }
+
+  // ATS Referral methods
+  async createAtsReferral(referral: InsertAtsReferral): Promise<AtsReferral> {
+    const result = await this.db
+      .insert(atsReferrals)
+      .values(referral)
+      .returning();
+    
+    return result[0];
+  }
+  
+  async getAtsReferralsByUser(userId: number): Promise<AtsReferral[]> {
+    return await this.db
+      .select()
+      .from(atsReferrals)
+      .where(eq(atsReferrals.userId, userId))
+      .orderBy(desc(atsReferrals.timestamp));
+  }
+  
+  async getAtsReferralByMatchId(matchId: number): Promise<AtsReferral | undefined> {
+    const result = await this.db
+      .select()
+      .from(atsReferrals)
+      .where(eq(atsReferrals.matchId, matchId))
+      .limit(1);
+    
+    return result[0];
+  }
+  
+  async updateAtsReferral(id: number, data: Partial<AtsReferral>): Promise<AtsReferral | undefined> {
+    const result = await this.db
+      .update(atsReferrals)
+      .set(data)
+      .where(eq(atsReferrals.id, id))
+      .returning();
+    
+    return result[0];
+  }
+  
+  async getPendingAtsReminders(): Promise<AtsReferral[]> {
+    const oneDayAgo = new Date();
+    oneDayAgo.setDate(oneDayAgo.getDate() - 1);
+    
+    return await this.db
+      .select()
+      .from(atsReferrals)
+      .where(
+        and(
+          eq(atsReferrals.action, 'skip'),
+          eq(atsReferrals.reminderSent, false),
+          sql`${atsReferrals.timestamp} < ${oneDayAgo}`
+        )
+      );
+  }
 }
 
 // Initialize storage based on environment

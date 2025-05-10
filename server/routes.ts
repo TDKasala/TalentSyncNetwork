@@ -5,7 +5,13 @@ import { login, register, verifyToken } from "./auth";
 import { createPaymentUrl, verifyPaymentNotification } from "./payfast";
 import { matchCandidateToJobs, matchJobsToCandidates, createMatchesFromResults, parseResume, generateBBBEEAnalytics } from "./ai";
 import { z } from "zod";
-import { insertUserSchema, insertCandidateProfileSchema, insertCompanyProfileSchema, insertJobSchema } from "@shared/schema";
+import { 
+  insertUserSchema, 
+  insertCandidateProfileSchema, 
+  insertCompanyProfileSchema, 
+  insertJobSchema,
+  insertAtsReferralSchema
+} from "@shared/schema";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
