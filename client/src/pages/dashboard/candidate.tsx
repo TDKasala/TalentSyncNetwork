@@ -81,6 +81,9 @@ const CandidateDashboard = () => {
       return response.json();
     },
     onSuccess: (data) => {
+      // Store the match ID in sessionStorage for the payment success page
+      sessionStorage.setItem('lastUnlockedMatchId', data.matchId.toString());
+      
       // Redirect to payment URL
       window.location.href = data.paymentUrl;
     },

@@ -2,8 +2,8 @@ import { useEffect, useState } from 'react';
 import { useLocation } from 'wouter';
 import { useQuery } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
-import { useUser } from '@/lib/auth';
 import { useLanguage } from '@/lib/i18n';
+import { useUser } from '@/hooks/useUser';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { AtsReferralModal } from '@/components/modals/AtsReferralModal';
@@ -37,7 +37,19 @@ const PaymentSuccessPage = () => {
 
   // Fetch match details if we have a matchId
   const { data: match, isLoading } = useQuery<Match>({
-    queryKey: matchId ? [`/api/matches/${matchId}`] : null,
+    queryKey: ['/api/matches/details', matchId],
+    queryFn: async () => {
+      if (!matchId) throw new Error('No match ID provided');
+      const response = await fetch(`/api/matches/${matchId}`, {
+        headers: {
+          'Authorization': localStorage.getItem('token') 
+            ? `Bearer ${localStorage.getItem('token')}` 
+            : '',
+        }
+      });
+      if (!response.ok) throw new Error('Failed to fetch match details');
+      return response.json();
+    },
     enabled: !!matchId && !!user && user.role === 'candidate',
   });
 
