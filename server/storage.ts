@@ -85,12 +85,14 @@ export class MemStorage implements IStorage {
     this.matches = new Map();
     this.transactions = new Map();
     this.consents = new Map();
+    this.atsReferrals = new Map();
     this.currentUserId = 1;
     this.currentProfileId = 1;
     this.currentJobId = 1;
     this.currentMatchId = 1;
     this.currentTransactionId = 1;
     this.currentConsentId = 1;
+    this.currentAtsReferralId = 1;
   }
 
   // User methods
@@ -380,6 +382,56 @@ export class MemStorage implements IStorage {
     return Array.from(this.consents.values())
       .filter(consent => consent.userId === userId)
       .sort((a, b) => new Date(b.givenAt).getTime() - new Date(a.givenAt).getTime());
+  }
+
+  // ATS Referral methods
+  async createAtsReferral(referral: InsertAtsReferral): Promise<AtsReferral> {
+    const id = this.currentAtsReferralId++;
+    const newReferral: AtsReferral = {
+      id,
+      ...referral,
+      timestamp: new Date(),
+      reminderSent: false,
+      reminderTimestamp: null
+    };
+    
+    this.atsReferrals.set(id, newReferral);
+    return newReferral;
+  }
+  
+  async getAtsReferralsByUser(userId: number): Promise<AtsReferral[]> {
+    return Array.from(this.atsReferrals.values())
+      .filter(referral => referral.userId === userId);
+  }
+  
+  async getAtsReferralByMatchId(matchId: number): Promise<AtsReferral | undefined> {
+    return Array.from(this.atsReferrals.values())
+      .find(referral => referral.matchId === matchId);
+  }
+  
+  async updateAtsReferral(id: number, data: Partial<AtsReferral>): Promise<AtsReferral | undefined> {
+    const referral = this.atsReferrals.get(id);
+    
+    if (!referral) {
+      return undefined;
+    }
+    
+    const updatedReferral = { ...referral, ...data };
+    this.atsReferrals.set(id, updatedReferral);
+    
+    return updatedReferral;
+  }
+  
+  async getPendingAtsReminders(): Promise<AtsReferral[]> {
+    const oneDayAgo = new Date();
+    oneDayAgo.setDate(oneDayAgo.getDate() - 1);
+    
+    return Array.from(this.atsReferrals.values())
+      .filter(referral => 
+        referral.action === 'skip' && 
+        !referral.reminderSent && 
+        referral.timestamp < oneDayAgo
+      );
   }
 }
 
