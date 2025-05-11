@@ -12,6 +12,27 @@ TalentSyncZA is an AI-driven recruitment platform for South Africa connecting jo
 - Multi-language support for South African languages
 - Resume optimization through ATSBoost.co.za
 
+### Skills Assessment Feature
+
+The Skills Assessment system allows candidates to verify their skills through interactive assessments:
+
+- Take skill-specific assessments with multiple-choice questions
+- Earn skill badges upon successful completion
+- Display earned badges on candidate profiles
+- Track assessment history and performance
+- Admin panel for creating and managing assessments
+
+#### UI/UX Features
+
+The Skills Assessment interface includes:
+
+- Responsive design for mobile, tablet, and desktop
+- Interactive question navigation
+- Visual progress tracking
+- Animated success/failure states
+- Detailed result screens with performance metrics
+- Badge showcase with animations
+
 ## Tech Stack
 
 - Frontend: React, TailwindCSS, shadcn/ui
