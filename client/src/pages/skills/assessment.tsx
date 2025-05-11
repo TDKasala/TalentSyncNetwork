@@ -4,7 +4,7 @@ import { useLocation } from 'wouter';
 // Extend Window interface to support the timer
 declare global {
   interface Window {
-    timerInterval?: number;
+    timerInterval?: NodeJS.Timeout;
   }
 }
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -287,15 +287,48 @@ export default function AssessmentPage({ id, attemptId }: AssessmentPageProps) {
           <Skeleton className="h-8 w-1/3" />
         </div>
         <Card>
-          <CardHeader>
-            <Skeleton className="h-8 w-1/4 mb-2" />
-            <Skeleton className="h-4 w-2/3" />
+          <CardHeader className="animate-pulse">
+            <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
+              <div className="space-y-3">
+                <Skeleton className="h-8 w-64" />
+                <div className="flex">
+                  <Skeleton className="h-5 w-5 mr-2" />
+                  <Skeleton className="h-5 w-32" />
+                </div>
+              </div>
+              <Skeleton className="h-6 w-28" />
+            </div>
           </CardHeader>
-          <CardContent>
-            <Skeleton className="h-40 w-full" />
+          
+          <CardContent className="space-y-6">
+            <div>
+              <Skeleton className="h-6 w-24 mb-2" />
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-5/6 mt-2" />
+              <Skeleton className="h-4 w-4/6 mt-2" />
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <div className="flex items-center mb-2">
+                  <Skeleton className="h-5 w-5 mr-2" />
+                  <Skeleton className="h-5 w-24" />
+                </div>
+                <Skeleton className="h-4 w-32" />
+              </div>
+              
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <div className="flex items-center mb-2">
+                  <Skeleton className="h-5 w-5 mr-2" />
+                  <Skeleton className="h-5 w-24" />
+                </div>
+                <Skeleton className="h-4 w-44" />
+              </div>
+            </div>
           </CardContent>
-          <CardFooter>
-            <Skeleton className="h-10 w-1/4" />
+          
+          <CardFooter className="flex justify-center">
+            <Skeleton className="h-10 w-32" />
           </CardFooter>
         </Card>
       </div>
@@ -310,16 +343,52 @@ export default function AssessmentPage({ id, attemptId }: AssessmentPageProps) {
           Back to Skills
         </Button>
         
-        <Card className="text-center py-8">
-          <CardContent>
-            <AlertTriangle className="h-12 w-12 mx-auto text-amber-500 mb-4" />
-            <h2 className="text-2xl font-bold mb-2">Something went wrong</h2>
-            <p className="text-gray-600 mb-6">
-              We couldn't load the assessment. Please try again or contact support.
-            </p>
-            <Button onClick={() => window.location.reload()}>
-              Reload Page
-            </Button>
+        <Card className="border border-amber-200">
+          <CardHeader className="bg-amber-50 border-b border-amber-100">
+            <div className="flex items-center">
+              <div className="bg-amber-100 p-2 rounded-full mr-4">
+                <AlertTriangle className="h-6 w-6 text-amber-600" />
+              </div>
+              <div>
+                <CardTitle>Unable to Load Assessment</CardTitle>
+                <CardDescription className="text-amber-700">
+                  We encountered a problem while loading the assessment data
+                </CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          
+          <CardContent className="pt-6">
+            <div className="space-y-4">
+              <p className="text-gray-700">
+                There was an error retrieving the assessment details or questions. This could be due to:
+              </p>
+              
+              <ul className="list-disc pl-5 space-y-1 text-gray-600">
+                <li>A temporary connection issue</li>
+                <li>The assessment may have been removed or updated</li>
+                <li>You may not have permission to access this assessment</li>
+              </ul>
+              
+              <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 mt-4">
+                <h4 className="font-semibold mb-2">What can you do?</h4>
+                <p className="text-sm text-gray-600 mb-4">
+                  Try the following steps to resolve the issue:
+                </p>
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <Button onClick={() => window.location.reload()} className="flex-1">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                    Reload Page
+                  </Button>
+                  <Button variant="outline" onClick={returnToSkills} className="flex-1">
+                    <ArrowLeft className="h-4 w-4 mr-2" />
+                    Return to Skills
+                  </Button>
+                </div>
+              </div>
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -330,88 +399,127 @@ export default function AssessmentPage({ id, attemptId }: AssessmentPageProps) {
   if (showResults && results) {
     return (
       <div className="container py-8 max-w-3xl">
-        <Card>
-          <CardHeader className={results.passed ? 'bg-green-50' : 'bg-amber-50'}>
-            <div className="flex justify-center mb-4">
-              {results.passed ? (
-                <div className="w-20 h-20 rounded-full bg-green-100 flex items-center justify-center">
-                  <CheckCircle2 className="h-12 w-12 text-green-600" />
-                </div>
-              ) : (
-                <div className="w-20 h-20 rounded-full bg-amber-100 flex items-center justify-center">
-                  <XCircle className="h-12 w-12 text-amber-600" />
-                </div>
-              )}
+        <Card className={results.passed ? 'border-green-200' : 'border-amber-200'}>
+          <CardHeader className={results.passed ? 'bg-green-50 border-b border-green-100' : 'bg-amber-50 border-b border-amber-100'}>
+            <div className="flex flex-col items-center">
+              <div className="mb-6 relative">
+                {results.passed ? (
+                  <>
+                    <div className="absolute -inset-1 rounded-full bg-green-200 animate-pulse opacity-70"></div>
+                    <div className="w-24 h-24 rounded-full bg-gradient-to-br from-green-100 to-green-200 flex items-center justify-center relative border-4 border-white shadow-md">
+                      <CheckCircle2 className="h-12 w-12 text-green-600" />
+                    </div>
+                  </>
+                ) : (
+                  <div className="w-24 h-24 rounded-full bg-gradient-to-br from-amber-100 to-amber-200 flex items-center justify-center border-4 border-white shadow-md">
+                    <XCircle className="h-12 w-12 text-amber-600" />
+                  </div>
+                )}
+              </div>
+              
+              <CardTitle className="text-center text-2xl mb-2">
+                {results.passed ? 'Congratulations!' : 'Assessment Completed'}
+              </CardTitle>
+              
+              <CardDescription className="text-center text-lg max-w-md">
+                {results.passed 
+                  ? `You've earned the ${assessment.skill} ${assessment.difficulty} badge!` 
+                  : 'You can try again when you are ready to improve your score.'}
+              </CardDescription>
             </div>
-            <CardTitle className="text-center text-2xl">
-              {results.passed ? 'Congratulations!' : 'Assessment Completed'}
-            </CardTitle>
-            <CardDescription className="text-center text-lg">
-              {results.passed 
-                ? `You've earned the ${assessment.skill} ${assessment.difficulty} badge!` 
-                : 'You can try again when you are ready.'}
-            </CardDescription>
           </CardHeader>
           
           <CardContent className="py-6">
-            <div className="flex flex-col items-center space-y-6">
-              <div className="flex flex-col items-center">
-                <p className="text-sm text-gray-500 mb-1">Your Score</p>
-                <div className="text-4xl font-bold">{results.score}%</div>
-                <p className="text-sm text-gray-500 mt-1">
-                  Pass score: {assessment.passingScore}%
-                </p>
+            <div className="flex flex-col items-center space-y-8">
+              <div className="w-full max-w-sm">
+                <div className="mb-2 flex justify-between items-center">
+                  <p className="text-sm font-medium text-gray-700">Your Score</p>
+                  <p className="text-sm text-gray-500">Pass: {assessment.passingScore}%</p>
+                </div>
+                
+                <div className="h-10 w-full bg-gray-100 rounded-full overflow-hidden">
+                  <div 
+                    className={`h-full flex items-center justify-center ${
+                      results.passed ? 'bg-green-500' : 'bg-amber-500'
+                    }`}
+                    style={{ width: `${Math.min(100, results.score)}%` }}
+                  >
+                    <span className="text-white font-bold">{results.score}%</span>
+                  </div>
+                </div>
               </div>
               
-              <Separator />
-              
-              <div className="flex flex-col sm:flex-row w-full justify-between gap-4 sm:gap-8">
-                <div className="flex flex-col items-center">
+              <div className="grid grid-cols-1 sm:grid-cols-3 w-full gap-4">
+                <div className="bg-gray-50 rounded-lg p-4 text-center">
+                  <div className="flex justify-center mb-2">
+                    <FileCheck className="h-5 w-5 text-blue-500" />
+                  </div>
                   <p className="text-sm text-gray-500 mb-1">Assessment</p>
-                  <p className="font-medium">{assessment.title}</p>
+                  <p className="font-medium text-sm">{assessment.title}</p>
                 </div>
                 
-                <div className="flex flex-col items-center">
+                <div className="bg-gray-50 rounded-lg p-4 text-center">
+                  <div className="flex justify-center mb-2">
+                    <Code className="h-5 w-5 text-indigo-500" />
+                  </div>
                   <p className="text-sm text-gray-500 mb-1">Skill</p>
-                  <p className="font-medium capitalize">{assessment.skill}</p>
+                  <p className="font-medium text-sm capitalize">{assessment.skill}</p>
                 </div>
                 
-                <div className="flex flex-col items-center">
+                <div className="bg-gray-50 rounded-lg p-4 text-center">
+                  <div className="flex justify-center mb-2">
+                    <Clock className="h-5 w-5 text-purple-500" />
+                  </div>
                   <p className="text-sm text-gray-500 mb-1">Time Spent</p>
-                  <p className="font-medium">{Math.floor(results.attempt.timeSpent / 60)}m {results.attempt.timeSpent % 60}s</p>
+                  <p className="font-medium text-sm">{Math.floor(results.attempt.timeSpent / 60)}m {results.attempt.timeSpent % 60}s</p>
                 </div>
               </div>
               
               {results.badgeAwarded && (
-                <div className="flex flex-col items-center mt-4">
-                  <div className="bg-amber-50 p-4 rounded-full mb-2 border border-amber-200">
-                    <Star className="h-12 w-12 text-amber-500" />
+                <div className="flex flex-col items-center bg-amber-50 p-6 rounded-lg border border-amber-200 w-full">
+                  <div className="relative mb-4">
+                    <div className="absolute -inset-2 rounded-full bg-yellow-200 animate-pulse opacity-50"></div>
+                    <div className="bg-gradient-to-br from-yellow-200 to-amber-300 p-4 rounded-full relative border-2 border-white shadow-lg">
+                      <Star className="h-10 w-10 text-amber-600" />
+                    </div>
                   </div>
-                  <p className="text-center font-medium">{assessment.skill} {assessment.difficulty} Badge</p>
+                  <h3 className="text-lg font-semibold text-amber-800 mb-2">Badge Earned!</h3>
+                  <p className="text-center font-medium text-amber-700 mb-3">
+                    {assessment.skill} {assessment.difficulty} Badge
+                  </p>
+                  <p className="text-sm text-amber-600 text-center mb-4 max-w-md">
+                    This badge will appear on your profile and shows employers that you've verified your skills.
+                  </p>
                   <Button 
-                    variant="outline" 
+                    variant="default" 
                     onClick={viewBadges}
-                    className="mt-2"
+                    className="bg-amber-600 hover:bg-amber-700"
                   >
                     <FileBadge className="h-4 w-4 mr-2" />
-                    View My Badges
+                    View My Badges Collection
                   </Button>
                 </div>
               )}
             </div>
           </CardContent>
           
-          <CardFooter className="flex justify-center space-x-4 bg-gray-50 py-4">
+          <CardFooter className={`flex flex-col sm:flex-row justify-center gap-4 ${results.passed ? 'bg-green-50' : 'bg-amber-50'} py-6 border-t ${results.passed ? 'border-green-100' : 'border-amber-100'}`}>
             {results.passed ? (
-              <Button onClick={returnToSkills}>
-                Return to Skills Assessment
-              </Button>
+              <>
+                <Button onClick={returnToSkills} className="w-full sm:w-auto">
+                  Return to Skills Assessment
+                </Button>
+                <Button variant="outline" onClick={viewBadges} className="w-full sm:w-auto">
+                  <FileBadge className="h-4 w-4 mr-2" />
+                  View My Badges
+                </Button>
+              </>
             ) : (
               <>
-                <Button variant="outline" onClick={returnToSkills}>
+                <Button variant="outline" onClick={returnToSkills} className="w-full sm:w-auto">
                   Back to Skills
                 </Button>
-                <Button onClick={tryAgain}>
+                <Button onClick={tryAgain} className="w-full sm:w-auto">
                   Try Again
                 </Button>
               </>
