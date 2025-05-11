@@ -18,6 +18,8 @@ import AssessmentPage from "@/pages/skills/assessment";
 import AdminSkillsPage from "@/pages/admin/skills";
 import { useUser } from "@/hooks/useUser";
 
+import { SharedLayout } from "@/components/layout/SharedLayout";
+
 function Router() {
   const { user, isLoading } = useUser();
 
@@ -44,49 +46,51 @@ function Router() {
   };
 
   return (
-    <Switch>
-      <Route path="/" component={Home} />
-      <Route path="/auth/login" component={Login} />
-      <Route path="/auth/register" component={Register} />
-      <Route path="/jobs">
-        <JobsPage />
-      </Route>
-      
-      {/* Protected Routes */}
-      <Route path="/dashboard/candidate">
-        {() => <ProtectedRoute component={CandidateDashboard} role="candidate" />}
-      </Route>
-      <Route path="/dashboard/recruiter">
-        {() => <ProtectedRoute component={RecruiterDashboard} role="recruiter" />}
-      </Route>
-      
-      {/* Payment routes - need protection but should allow either candidate or recruiter roles */}
-      <Route path="/dashboard/payment/success">
-        {() => <ProtectedRoute component={PaymentSuccessPage} />}
-      </Route>
-      <Route path="/dashboard/payment/cancel">
-        {() => <ProtectedRoute component={PaymentCancelPage} />}
-      </Route>
-      
-      {/* Skills Assessment Routes */}
-      <Route path="/skills">
-        <SkillsAssessmentsPage />
-      </Route>
-      <Route path="/skills/assessment/:id">
-        {({ id }) => <AssessmentPage id={id} />}
-      </Route>
-      <Route path="/skills/assessment/:id/attempt/:attemptId">
-        {({ id, attemptId }) => <AssessmentPage id={id} attemptId={attemptId} />}
-      </Route>
-      
-      {/* Admin Routes */}
-      <Route path="/admin/skills">
-        {() => <ProtectedRoute component={AdminSkillsPage} />}
-      </Route>
-      
-      {/* Fallback to 404 */}
-      <Route component={NotFound} />
-    </Switch>
+    <SharedLayout>
+      <Switch>
+        <Route path="/" component={Home} />
+        <Route path="/auth/login" component={Login} />
+        <Route path="/auth/register" component={Register} />
+        <Route path="/jobs">
+          <JobsPage />
+        </Route>
+        
+        {/* Protected Routes */}
+        <Route path="/dashboard/candidate">
+          {() => <ProtectedRoute component={CandidateDashboard} role="candidate" />}
+        </Route>
+        <Route path="/dashboard/recruiter">
+          {() => <ProtectedRoute component={RecruiterDashboard} role="recruiter" />}
+        </Route>
+        
+        {/* Payment routes - need protection but should allow either candidate or recruiter roles */}
+        <Route path="/dashboard/payment/success">
+          {() => <ProtectedRoute component={PaymentSuccessPage} />}
+        </Route>
+        <Route path="/dashboard/payment/cancel">
+          {() => <ProtectedRoute component={PaymentCancelPage} />}
+        </Route>
+        
+        {/* Skills Assessment Routes */}
+        <Route path="/skills">
+          <SkillsAssessmentsPage />
+        </Route>
+        <Route path="/skills/assessment/:id">
+          {({ id }) => <AssessmentPage id={id} />}
+        </Route>
+        <Route path="/skills/assessment/:id/attempt/:attemptId">
+          {({ id, attemptId }) => <AssessmentPage id={id} attemptId={attemptId} />}
+        </Route>
+        
+        {/* Admin Routes */}
+        <Route path="/admin/skills">
+          {() => <ProtectedRoute component={AdminSkillsPage} />}
+        </Route>
+        
+        {/* Fallback to 404 */}
+        <Route component={NotFound} />
+      </Switch>
+    </SharedLayout>
   );
 }
 

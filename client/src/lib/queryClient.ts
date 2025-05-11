@@ -11,15 +11,32 @@ export async function apiRequest(
   url: string,
   options: {
     method?: string;
-    data?: unknown;
+    body?: any;
+    headers?: Record<string, string>;
   } = {}
 ): Promise<any> {
-  const { method = 'GET', data } = options;
+  const { method = 'GET', body, headers = {} } = options;
+  
+  // Get auth token if it exists
+  const authToken = localStorage.getItem('authToken');
+  
+  // Create combined headers
+  const combinedHeaders = new Headers(headers);
+  
+  // Add auth header if token exists
+  if (authToken) {
+    combinedHeaders.set('Authorization', `Bearer ${authToken}`);
+  }
+  
+  // Add content type for JSON bodies
+  if (body) {
+    combinedHeaders.set('Content-Type', 'application/json');
+  }
   
   const res = await fetch(url, {
     method,
-    headers: data ? { "Content-Type": "application/json" } : {},
-    body: data ? JSON.stringify(data) : undefined,
+    headers: combinedHeaders,
+    body,
     credentials: "include",
   });
 
@@ -40,8 +57,17 @@ export const getQueryFn: <T>(options: {
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
+    // Add authorization header if token exists
+    const authToken = localStorage.getItem('authToken');
+    const headers = new Headers();
+    
+    if (authToken) {
+      headers.set('Authorization', `Bearer ${authToken}`);
+    }
+    
     const res = await fetch(queryKey[0] as string, {
       credentials: "include",
+      headers
     });
 
     if (unauthorizedBehavior === "returnNull" && res.status === 401) {
