@@ -169,7 +169,7 @@ const CandidateDashboard = () => {
       title: "Views This Week",
       value: 12,
       icon: <BarChart3 className="h-5 w-5 text-primary-700" />,
-      trend: "up",
+      trend: "up" as const,
       trendValue: "30%"
     }
   ];
