@@ -12,6 +12,7 @@ import { eq, and, inArray, like, desc, sql, or } from "drizzle-orm";
 import { createId } from '@paralleldrive/cuid2';
 import bcrypt from 'bcryptjs';
 import { PostgresJsDatabase } from "drizzle-orm/postgres-js";
+import { neon, neonConfig } from "@neondatabase/serverless";
 import postgres from "postgres";
 import { drizzle } from "drizzle-orm/postgres-js";
 
@@ -682,10 +683,25 @@ export class DatabaseStorage implements IStorage {
   private db: PostgresJsDatabase;
 
   constructor(connectionString: string) {
-    // Create a Postgres client
-    const client = postgres(connectionString);
+    // Configure neon for serverless environments
+    neonConfig.fetchConnectionCache = true;
+    
+    // Create a Postgres client using neon
+    const client = neon(connectionString);
+    
     // Create a Drizzle ORM instance
     this.db = drizzle(client);
+  }
+  
+  // Database status check
+  async isDatabaseSeeded(): Promise<boolean> {
+    try {
+      const count = await this.db.select({ count: sql<number>`count(*)` }).from(users);
+      return count[0]?.count > 0;
+    } catch (error) {
+      console.error("Error checking database seed status:", error);
+      return false;
+    }
   }
 
   // User methods
