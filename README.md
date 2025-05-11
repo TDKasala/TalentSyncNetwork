@@ -65,7 +65,9 @@ The Skills Assessment interface includes:
 
 ## Deployment
 
-See [VERCEL_DEPLOYMENT_GUIDE.md](./VERCEL_DEPLOYMENT_GUIDE.md) for detailed deployment instructions.
+For detailed deployment instructions:
+- [Supabase & Vercel Deployment Guide](./SUPABASE_VERCEL_GUIDE.md) - Connect to Supabase and deploy to Vercel
+- [Vercel Deployment Guide](./VERCEL_DEPLOYMENT_GUIDE.md) - General Vercel deployment instructions
 
 ## License
 
