@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { WebSocketDemo } from '@/components/WebSocketDemo';
 import { useLanguage } from '@/lib/i18n';
+import { Link } from "wouter";
 
 const ChatPage = () => {
   const { t } = useLanguage();
