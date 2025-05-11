@@ -72,10 +72,8 @@ export function StatCard({
 
   if (link) {
     return (
-      <Link href={link}>
-        <a className="block transition hover:shadow-md">
-          {content}
-        </a>
+      <Link href={link} className="block transition hover:shadow-md">
+        {content}
       </Link>
     );
   }
