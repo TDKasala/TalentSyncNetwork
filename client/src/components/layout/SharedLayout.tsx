@@ -30,7 +30,8 @@ import {
   UserPlus, 
   BarChart, 
   Settings,
-  Trophy
+  Trophy,
+  MessageSquare
 } from "lucide-react";
 
 export function SharedLayout({ children }: { children: React.ReactNode }) {
@@ -72,6 +73,9 @@ export function SharedLayout({ children }: { children: React.ReactNode }) {
               </Link>
               <Link href="/skills" className={`text-sm ${isActive("/skills")}`}>
                 Skills
+              </Link>
+              <Link href="/chat" className={`text-sm ${isActive("/chat")}`}>
+                Chat
               </Link>
               {user?.role === "candidate" && (
                 <Link href="/dashboard/candidate" className={`text-sm ${isActive("/dashboard/candidate")}`}>
@@ -116,6 +120,12 @@ export function SharedLayout({ children }: { children: React.ReactNode }) {
                     <DropdownMenuItem asChild>
                       <Link href="/skills" className="cursor-pointer">
                         Skills Assessment
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link href="/chat" className="cursor-pointer">
+                        <MessageSquare size={16} className="mr-2" />
+                        Chat & Messaging
                       </Link>
                     </DropdownMenuItem>
                     {user.role === "recruiter" && (
@@ -173,6 +183,12 @@ export function SharedLayout({ children }: { children: React.ReactNode }) {
                     <Link href="/skills" className="flex items-center gap-2 p-2">
                       <Award size={20} />
                       <span>Skills</span>
+                    </Link>
+                  </SheetClose>
+                  <SheetClose asChild>
+                    <Link href="/chat" className="flex items-center gap-2 p-2">
+                      <MessageSquare size={20} />
+                      <span>Chat</span>
                     </Link>
                   </SheetClose>
 
