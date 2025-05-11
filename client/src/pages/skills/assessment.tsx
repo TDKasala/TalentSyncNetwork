@@ -1,5 +1,12 @@
 import { useState, useEffect } from 'react';
-import { useLocation, useParams } from 'wouter';
+import { useLocation } from 'wouter';
+
+// Extend Window interface to support the timer
+declare global {
+  interface Window {
+    timerInterval?: number;
+  }
+}
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import { Button } from '@/components/ui/button';
@@ -36,8 +43,12 @@ const badgeColors: Record<string, string> = {
   expert: 'bg-purple-100 text-purple-800 hover:bg-purple-100'
 };
 
-export default function AssessmentPage() {
-  const { id, attemptId } = useParams<{ id: string; attemptId?: string }>();
+interface AssessmentPageProps {
+  id: string;
+  attemptId?: string;
+}
+
+export default function AssessmentPage({ id, attemptId }: AssessmentPageProps) {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();

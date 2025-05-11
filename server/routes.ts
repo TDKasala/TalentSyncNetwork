@@ -55,7 +55,9 @@ const authenticate = async (req: Request, res: Response, next: Function) => {
 // Admin authentication middleware
 const authenticateAdmin = async (req: Request, res: Response, next: Function) => {
   await authenticate(req, res, () => {
-    if (!req.user?.isAdmin) {
+    // Check if user has admin role (admin role may be "admin" in the future)
+    // For now, allow only "recruiter" role to access admin functions
+    if (req.user?.role !== "recruiter") {
       return res.status(403).json({ message: 'Admin access required' });
     }
     next();

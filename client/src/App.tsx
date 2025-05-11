@@ -73,10 +73,10 @@ function Router() {
         <SkillsAssessmentsPage />
       </Route>
       <Route path="/skills/assessment/:id">
-        {({ id }) => <AssessmentPage params={{ id }} />}
+        {({ id }) => <AssessmentPage id={id} />}
       </Route>
       <Route path="/skills/assessment/:id/attempt/:attemptId">
-        {({ id, attemptId }) => <AssessmentPage params={{ id, attemptId }} />}
+        {({ id, attemptId }) => <AssessmentPage id={id} attemptId={attemptId} />}
       </Route>
       
       {/* Admin Routes */}
