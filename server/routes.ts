@@ -10,7 +10,12 @@ import {
   insertCandidateProfileSchema, 
   insertCompanyProfileSchema, 
   insertJobSchema,
-  insertAtsReferralSchema
+  insertAtsReferralSchema,
+  insertSkillAssessmentSchema,
+  insertAssessmentQuestionSchema,
+  insertAssessmentAttemptSchema,
+  insertSkillBadgeSchema,
+  ZodError
 } from "@shared/schema";
 import multer from "multer";
 import path from "path";
