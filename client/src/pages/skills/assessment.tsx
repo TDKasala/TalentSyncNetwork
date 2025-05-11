@@ -151,6 +151,7 @@ export default function AssessmentPage({ id, attemptId }: AssessmentPageProps) {
     return () => {
       if (window.timerInterval) {
         clearInterval(window.timerInterval);
+        window.timerInterval = undefined;
       }
     };
   }, []);
@@ -158,9 +159,10 @@ export default function AssessmentPage({ id, attemptId }: AssessmentPageProps) {
   const startTimer = () => {
     if (window.timerInterval) {
       clearInterval(window.timerInterval);
+      window.timerInterval = undefined;
     }
     
-    window.timerInterval = setInterval(() => {
+    window.timerInterval = window.setInterval(() => {
       setTimeSpent(prev => prev + 1);
     }, 1000);
   };

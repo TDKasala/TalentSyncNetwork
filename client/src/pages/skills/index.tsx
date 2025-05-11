@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import {
+  AlertCircle,
   BookOpen,
   Clock,
   Code,
@@ -34,7 +35,8 @@ export default function SkillAssessmentsPage() {
   const {
     data: assessments,
     isLoading: isLoadingAssessments,
-    error: assessmentsError
+    error: assessmentsError,
+    refetch: refetchAssessments
   } = useQuery({
     queryKey: ['/api/skill-assessments'],
     enabled: activeTab === 'assessments'
@@ -121,18 +123,42 @@ export default function SkillAssessmentsPage() {
             </div>
           ) : assessmentsError ? (
             <div className="text-center py-8">
-              <p className="text-red-500 mb-4">Failed to load skills assessments</p>
-              <Button variant="outline" onClick={() => window.location.reload()}>
-                Try Again
-              </Button>
+              <div className="bg-red-50 border border-red-200 rounded-lg p-6 max-w-md mx-auto">
+                <div className="flex flex-col items-center">
+                  <AlertCircle className="h-12 w-12 text-red-500 mb-4" />
+                  <h3 className="text-lg font-semibold text-red-700 mb-2">Failed to load skills assessments</h3>
+                  <p className="text-sm text-gray-600 mb-4 text-center">
+                    There was an error loading the available assessments. Please try again or contact support if the problem persists.
+                  </p>
+                  <div className="flex space-x-3">
+                    <Button variant="outline" onClick={() => refetchAssessments()}>
+                      Try Again
+                    </Button>
+                    <Button variant="default" onClick={() => window.location.reload()}>
+                      Refresh Page
+                    </Button>
+                  </div>
+                </div>
+              </div>
             </div>
           ) : assessments?.length === 0 ? (
-            <div className="text-center py-12 bg-gray-50 rounded-lg">
-              <GraduationCap className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-              <h3 className="text-xl font-medium mb-2">No assessments available yet</h3>
-              <p className="text-gray-500 mb-4">
-                Check back soon as we add skill assessments in various categories.
-              </p>
+            <div className="text-center py-12 bg-gradient-to-b from-gray-50 to-gray-100 rounded-lg border border-gray-200 shadow-sm">
+              <div className="max-w-md mx-auto px-4">
+                <div className="bg-white p-3 rounded-full w-20 h-20 mx-auto mb-4 flex items-center justify-center shadow-sm">
+                  <GraduationCap className="h-10 w-10 text-blue-500" />
+                </div>
+                <h3 className="text-xl font-semibold mb-3">No assessments available yet</h3>
+                <p className="text-gray-600 mb-6 max-w-sm mx-auto">
+                  Our team is working on creating skills assessments. Check back soon as we add assessments for various in-demand skills.
+                </p>
+                <div className="flex flex-wrap gap-3 justify-center mb-4">
+                  <Badge variant="outline" className="py-1.5 px-3 text-sm">JavaScript</Badge>
+                  <Badge variant="outline" className="py-1.5 px-3 text-sm">React</Badge>
+                  <Badge variant="outline" className="py-1.5 px-3 text-sm">Python</Badge>
+                  <Badge variant="outline" className="py-1.5 px-3 text-sm">Data Analysis</Badge>
+                  <Badge variant="outline" className="py-1.5 px-3 text-sm">Marketing</Badge>
+                </div>
+              </div>
             </div>
           ) : (
             <>
