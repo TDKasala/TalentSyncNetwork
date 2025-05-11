@@ -16,9 +16,11 @@ import PaymentCancelPage from "@/pages/dashboard/payment/cancel";
 import SkillsAssessmentsPage from "@/pages/skills";
 import AssessmentPage from "@/pages/skills/assessment";
 import AdminSkillsPage from "@/pages/admin/skills";
+import ChatPage from "@/pages/chat";
 import { useUser } from "@/hooks/useUser";
 
 import { SharedLayout } from "@/components/layout/SharedLayout";
+import { WebSocketProvider } from "@/components/WebSocketProvider";
 
 function Router() {
   const { user, isLoading } = useUser();
@@ -82,6 +84,11 @@ function Router() {
           {({ id, attemptId }) => <AssessmentPage id={id} attemptId={attemptId} />}
         </Route>
         
+        {/* Chat Demo Route */}
+        <Route path="/chat">
+          <ChatPage />
+        </Route>
+        
         {/* Admin Routes */}
         <Route path="/admin/skills">
           {() => <ProtectedRoute component={AdminSkillsPage} />}
@@ -100,7 +107,9 @@ function App() {
       <ThemeProvider attribute="class" defaultTheme="light">
         <TooltipProvider>
           <Toaster />
-          <Router />
+          <WebSocketProvider>
+            <Router />
+          </WebSocketProvider>
         </TooltipProvider>
       </ThemeProvider>
     </QueryClientProvider>
