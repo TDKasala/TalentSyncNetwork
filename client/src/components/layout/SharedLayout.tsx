@@ -39,6 +39,9 @@ export function SharedLayout({ children }: { children: React.ReactNode }) {
   const { user, logout, isLoading } = useUser();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
+  // Don't show header/footer on home page since it has its own
+  const isHomePage = location === "/";
+
   const isActive = (path: string) => {
     return location.startsWith(path) ? "text-primary font-medium" : "text-muted-foreground";
   };
@@ -51,6 +54,11 @@ export function SharedLayout({ children }: { children: React.ReactNode }) {
     logout();
     closeMobileMenu();
   };
+
+  // If it's the home page, don't add layout elements
+  if (isHomePage) {
+    return <>{children}</>;
+  }
 
   return (
     <div className="flex flex-col min-h-screen">
