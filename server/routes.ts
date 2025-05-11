@@ -1,10 +1,17 @@
-import type { Express, Request, Response } from "express";
+import type { Express, Request as ExpressRequest, Response } from "express";
+import { User } from "@shared/schema";
+
+// Extend the Request type to include user property
+interface Request extends ExpressRequest {
+  user?: User;
+  file?: Express.Multer.File;
+}
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { login, register, verifyToken } from "./auth";
 import { createPaymentUrl, verifyPaymentNotification } from "./payfast";
 import { matchCandidateToJobs, matchJobsToCandidates, createMatchesFromResults, parseResume, generateBBBEEAnalytics } from "./ai";
-import { z } from "zod";
+import { z, ZodError } from "zod";
 import { 
   insertUserSchema, 
   insertCandidateProfileSchema, 
@@ -14,8 +21,7 @@ import {
   insertSkillAssessmentSchema,
   insertAssessmentQuestionSchema,
   insertAssessmentAttemptSchema,
-  insertSkillBadgeSchema,
-  ZodError
+  insertSkillBadgeSchema
 } from "@shared/schema";
 import multer from "multer";
 import path from "path";
@@ -923,6 +929,329 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error(error);
       res.status(500).json({ message: 'Server error generating analytics' });
     }
+  });
+  
+  // Skills Assessment Routes
+  // Get all active skill assessments
+  app.get('/api/skill-assessments', async (req, res) => {
+    try {
+      const assessments = await storage.getActiveSkillAssessments();
+      res.json(assessments);
+    } catch (error) {
+      console.error('Error fetching skill assessments:', error);
+      res.status(500).json({ error: 'Failed to fetch skill assessments' });
+    }
+  });
+
+  // Get a specific skill assessment
+  app.get('/api/skill-assessments/:id', async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ error: 'Invalid assessment ID' });
+      }
+
+      const assessment = await storage.getSkillAssessment(id);
+      if (!assessment) {
+        return res.status(404).json({ error: 'Assessment not found' });
+      }
+
+      res.json(assessment);
+    } catch (error) {
+      console.error('Error fetching skill assessment:', error);
+      res.status(500).json({ error: 'Failed to fetch skill assessment' });
+    }
+  });
+
+  // Get assessments by skill
+  app.get('/api/skill-assessments/by-skill/:skill', async (req, res) => {
+    try {
+      const skill = req.params.skill;
+      const assessments = await storage.getSkillAssessmentsBySkill(skill);
+      res.json(assessments);
+    } catch (error) {
+      console.error('Error fetching skill assessments by skill:', error);
+      res.status(500).json({ error: 'Failed to fetch skill assessments' });
+    }
+  });
+
+  // Create a new skill assessment (admin only)
+  app.post('/api/skill-assessments', authenticateAdmin, async (req, res) => {
+    try {
+      const assessmentData = insertSkillAssessmentSchema.parse(req.body);
+      const assessment = await storage.createSkillAssessment(assessmentData);
+      res.status(201).json(assessment);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ error: formatZodError(error) });
+      }
+      console.error('Error creating skill assessment:', error);
+      res.status(500).json({ error: 'Failed to create skill assessment' });
+    }
+  });
+
+  // Update skill assessment (admin only)
+  app.patch('/api/skill-assessments/:id', authenticateAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ error: 'Invalid assessment ID' });
+      }
+
+      const assessment = await storage.getSkillAssessment(id);
+      if (!assessment) {
+        return res.status(404).json({ error: 'Assessment not found' });
+      }
+
+      const updatedAssessment = await storage.updateSkillAssessment(id, req.body);
+      res.json(updatedAssessment);
+    } catch (error) {
+      console.error('Error updating skill assessment:', error);
+      res.status(500).json({ error: 'Failed to update skill assessment' });
+    }
+  });
+
+  // Get assessment questions
+  app.get('/api/skill-assessments/:id/questions', async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ error: 'Invalid assessment ID' });
+      }
+
+      const assessment = await storage.getSkillAssessment(id);
+      if (!assessment) {
+        return res.status(404).json({ error: 'Assessment not found' });
+      }
+
+      const questions = await storage.getAssessmentQuestions(id);
+      
+      // For security, don't send correct answers to client unless admin
+      if (!req.user?.isAdmin) {
+        const questionsWithoutAnswers = questions.map(q => {
+          const { correctAnswer, ...questionWithoutAnswer } = q;
+          return questionWithoutAnswer;
+        });
+        return res.json(questionsWithoutAnswers);
+      }
+      
+      res.json(questions);
+    } catch (error) {
+      console.error('Error fetching assessment questions:', error);
+      res.status(500).json({ error: 'Failed to fetch assessment questions' });
+    }
+  });
+
+  // Create assessment question (admin only)
+  app.post('/api/skill-assessments/:id/questions', authenticateAdmin, async (req, res) => {
+    try {
+      const assessmentId = parseInt(req.params.id);
+      if (isNaN(assessmentId)) {
+        return res.status(400).json({ error: 'Invalid assessment ID' });
+      }
+
+      const assessment = await storage.getSkillAssessment(assessmentId);
+      if (!assessment) {
+        return res.status(404).json({ error: 'Assessment not found' });
+      }
+
+      const questionData = insertAssessmentQuestionSchema.parse({
+        ...req.body,
+        assessmentId
+      });
+      
+      const question = await storage.createAssessmentQuestion(questionData);
+      res.status(201).json(question);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ error: formatZodError(error) });
+      }
+      console.error('Error creating assessment question:', error);
+      res.status(500).json({ error: 'Failed to create assessment question' });
+    }
+  });
+
+  // Update assessment question (admin only)
+  app.patch('/api/assessment-questions/:id', authenticateAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ error: 'Invalid question ID' });
+      }
+
+      const updatedQuestion = await storage.updateAssessmentQuestion(id, req.body);
+      if (!updatedQuestion) {
+        return res.status(404).json({ error: 'Question not found' });
+      }
+      
+      res.json(updatedQuestion);
+    } catch (error) {
+      console.error('Error updating assessment question:', error);
+      res.status(500).json({ error: 'Failed to update assessment question' });
+    }
+  });
+
+  // Delete assessment question (admin only)
+  app.delete('/api/assessment-questions/:id', authenticateAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ error: 'Invalid question ID' });
+      }
+
+      const success = await storage.deleteAssessmentQuestion(id);
+      if (!success) {
+        return res.status(404).json({ error: 'Question not found' });
+      }
+      
+      res.status(204).end();
+    } catch (error) {
+      console.error('Error deleting assessment question:', error);
+      res.status(500).json({ error: 'Failed to delete assessment question' });
+    }
+  });
+
+  // Start an assessment attempt
+  app.post('/api/skill-assessments/:id/attempt', authenticate, async (req, res) => {
+    try {
+      const assessmentId = parseInt(req.params.id);
+      if (isNaN(assessmentId)) {
+        return res.status(400).json({ error: 'Invalid assessment ID' });
+      }
+
+      const assessment = await storage.getSkillAssessment(assessmentId);
+      if (!assessment) {
+        return res.status(404).json({ error: 'Assessment not found' });
+      }
+
+      // Create attempt
+      const attempt = await storage.createAssessmentAttempt({
+        userId: req.user!.id,
+        assessmentId,
+        score: null,
+        completedAt: null,
+        passed: null,
+        answers: null,
+        timeSpent: null
+      });
+      
+      res.status(201).json(attempt);
+    } catch (error) {
+      console.error('Error starting assessment attempt:', error);
+      res.status(500).json({ error: 'Failed to start assessment attempt' });
+    }
+  });
+
+  // Submit assessment attempt
+  app.post('/api/assessment-attempts/:id/submit', authenticate, async (req, res) => {
+    try {
+      const attemptId = parseInt(req.params.id);
+      if (isNaN(attemptId)) {
+        return res.status(400).json({ error: 'Invalid attempt ID' });
+      }
+
+      const attempt = await storage.getAssessmentAttempt(attemptId);
+      if (!attempt) {
+        return res.status(404).json({ error: 'Attempt not found' });
+      }
+
+      // Verify attempt belongs to authenticated user
+      if (attempt.userId !== req.user!.id) {
+        return res.status(403).json({ error: 'Not authorized to submit this attempt' });
+      }
+
+      // Get assessment info
+      const assessment = await storage.getSkillAssessment(attempt.assessmentId);
+      if (!assessment) {
+        return res.status(404).json({ error: 'Assessment not found' });
+      }
+
+      // Get questions for this assessment
+      const questions = await storage.getAssessmentQuestions(attempt.assessmentId);
+      
+      // Validate submission format
+      const { answers, timeSpent } = req.body;
+      if (!answers || !Array.isArray(answers)) {
+        return res.status(400).json({ error: 'Invalid answers format' });
+      }
+
+      // Calculate score
+      let score = 0;
+      const maxScore = questions.reduce((sum, q) => sum + q.points, 0);
+      
+      // Process answers
+      for (const answer of answers) {
+        const question = questions.find(q => q.id === answer.questionId);
+        if (question && answer.answer === question.correctAnswer) {
+          score += question.points;
+        }
+      }
+      
+      // Calculate percentage
+      const percentage = Math.round((score / maxScore) * 100);
+      
+      // Check if passed
+      const passed = percentage >= assessment.passingScore;
+      
+      // Update attempt with results
+      const updatedAttempt = await storage.updateAssessmentAttempt(attemptId, {
+        score: percentage,
+        completedAt: new Date(),
+        passed,
+        answers: answers,
+        timeSpent,
+        verified: true,
+        badgeAwarded: passed
+      });
+      
+      // If passed, create a skill badge
+      if (passed) {
+        await storage.createSkillBadge({
+          userId: req.user!.id,
+          skill: assessment.skill,
+          level: assessment.difficulty,
+          attemptId,
+          expiresAt: null // Badges don't expire by default
+        });
+      }
+      
+      res.json({
+        attempt: updatedAttempt,
+        score: percentage,
+        passed,
+        badgeAwarded: passed
+      });
+    } catch (error) {
+      console.error('Error submitting assessment attempt:', error);
+      res.status(500).json({ error: 'Failed to submit assessment attempt' });
+    }
+  });
+
+  // Get user's assessment attempts
+  app.get('/api/user/assessment-attempts', authenticate, async (req, res) => {
+    try {
+      const attempts = await storage.getUserAssessmentAttempts(req.user!.id);
+      res.json(attempts);
+    } catch (error) {
+      console.error('Error fetching user assessment attempts:', error);
+      res.status(500).json({ error: 'Failed to fetch assessment attempts' });
+    }
+  });
+
+  // Get user's skill badges
+  app.get('/api/user/skill-badges', authenticate, async (req, res) => {
+    try {
+      const badges = await storage.getUserSkillBadges(req.user!.id);
+      res.json(badges);
+    } catch (error) {
+      console.error('Error fetching user skill badges:', error);
+      res.status(500).json({ error: 'Failed to fetch skill badges' });
+    }
+  });
+  
+  // Add catch-all route for API endpoints
+  app.use('/api/*', (req, res) => {
+    res.status(404).json({ error: 'Endpoint not found' });
   });
   
   // Run matching algorithm periodically (e.g., daily)
