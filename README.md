@@ -5,7 +5,7 @@ TalentSyncZA is an AI-driven recruitment platform for South Africa connecting jo
 ## Features
 
 - AI-powered job matching algorithms
-- Skills assessment and verification
+- Skills assessment and verification with badge rewards
 - B-BBEE compliance reporting
 - POPIA-compliant data handling
 - PayFast payment integration
