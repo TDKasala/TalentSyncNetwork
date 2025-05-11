@@ -7,6 +7,7 @@ interface Request extends ExpressRequest {
   file?: Express.Multer.File;
 }
 import { createServer, type Server } from "http";
+import { WebSocketServer, WebSocket } from "ws";
 import { storage } from "./storage";
 import { login, register, verifyToken } from "./auth";
 import { createPaymentUrl, verifyPaymentNotification } from "./payfast";
@@ -1285,5 +1286,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
   setTimeout(runMatchingAlgorithm, 5000);
   
   const httpServer = createServer(app);
+  
+  // Set up WebSocket server on a different path from Vite's HMR
+  const wss = new WebSocketServer({ server: httpServer, path: '/ws' });
+  
+  wss.on('connection', (ws) => {
+    console.log('WebSocket client connected');
+    
+    // Send a welcome message
+    ws.send(JSON.stringify({ type: 'connection', message: 'Connected to TalentSyncZA WebSocket server' }));
+    
+    // Listen for messages from client
+    ws.on('message', (message) => {
+      try {
+        const data = JSON.parse(message.toString());
+        console.log('Received message:', data);
+        
+        // Handle different message types
+        switch (data.type) {
+          case 'ping':
+            ws.send(JSON.stringify({ type: 'pong', timestamp: Date.now() }));
+            break;
+            
+          default:
+            ws.send(JSON.stringify({ type: 'error', message: 'Unknown message type' }));
+        }
+      } catch (error) {
+        console.error('Error processing message:', error);
+        ws.send(JSON.stringify({ type: 'error', message: 'Invalid message format' }));
+      }
+    });
+    
+    ws.on('close', () => {
+      console.log('WebSocket client disconnected');
+    });
+  });
+  
   return httpServer;
 }
