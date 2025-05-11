@@ -13,6 +13,9 @@ import RecruiterDashboard from "@/pages/dashboard/recruiter";
 import JobsPage from "@/pages/jobs";
 import PaymentSuccessPage from "@/pages/dashboard/payment/success";
 import PaymentCancelPage from "@/pages/dashboard/payment/cancel";
+import SkillsAssessmentsPage from "@/pages/skills";
+import AssessmentPage from "@/pages/skills/assessment";
+import AdminSkillsPage from "@/pages/admin/skills";
 import { useUser } from "@/hooks/useUser";
 
 function Router() {
@@ -63,6 +66,22 @@ function Router() {
       </Route>
       <Route path="/dashboard/payment/cancel">
         {() => <ProtectedRoute component={PaymentCancelPage} />}
+      </Route>
+      
+      {/* Skills Assessment Routes */}
+      <Route path="/skills">
+        <SkillsAssessmentsPage />
+      </Route>
+      <Route path="/skills/assessment/:id">
+        {({ id }) => <AssessmentPage params={{ id }} />}
+      </Route>
+      <Route path="/skills/assessment/:id/attempt/:attemptId">
+        {({ id, attemptId }) => <AssessmentPage params={{ id, attemptId }} />}
+      </Route>
+      
+      {/* Admin Routes */}
+      <Route path="/admin/skills">
+        {() => <ProtectedRoute component={AdminSkillsPage} />}
       </Route>
       
       {/* Fallback to 404 */}
