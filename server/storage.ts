@@ -17,6 +17,9 @@ import { drizzle } from "drizzle-orm/postgres-js";
 
 // Extend interface with necessary CRUD methods
 export interface IStorage {
+  // Storage status
+  isDatabaseSeeded(): Promise<boolean>;
+  
   // User methods
   getUser(id: number): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
@@ -114,6 +117,7 @@ export class MemStorage implements IStorage {
   private currentAssessmentQuestionId: number;
   private currentAssessmentAttemptId: number;
   private currentSkillBadgeId: number;
+  private seeded: boolean;
 
   constructor() {
     this.users = new Map();
@@ -139,6 +143,17 @@ export class MemStorage implements IStorage {
     this.currentAssessmentQuestionId = 1;
     this.currentAssessmentAttemptId = 1;
     this.currentSkillBadgeId = 1;
+    this.seeded = false;
+  }
+  
+  // Database status
+  async isDatabaseSeeded(): Promise<boolean> {
+    return this.seeded || this.users.size > 0;
+  }
+  
+  // Set seeded status
+  setSeeded(status: boolean): void {
+    this.seeded = status;
   }
 
   // User methods
