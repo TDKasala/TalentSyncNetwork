@@ -1,6 +1,8 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import { storage } from "./storage";
+import { seedDatabase } from "./seedData";
 
 const app = express();
 app.use(express.json());
@@ -38,6 +40,26 @@ app.use((req, res, next) => {
 
 (async () => {
   const server = await registerRoutes(app);
+
+  // Check if database needs to be seeded
+  try {
+    const isSeeded = await storage.isDatabaseSeeded();
+    if (!isSeeded) {
+      log('Seeding database with initial data...');
+      const seedResult = await seedDatabase(storage);
+      
+      if (storage.setSeeded) {
+        storage.setSeeded(true);
+      }
+      
+      log('Database seeded successfully!');
+    } else {
+      log('Database already seeded, skipping seed process.');
+    }
+  } catch (error) {
+    log('Error seeding database: ' + (error as Error).message);
+    console.error(error);
+  }
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
