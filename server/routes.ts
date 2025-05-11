@@ -46,6 +46,24 @@ const authenticate = async (req: Request, res: Response, next: Function) => {
   next();
 };
 
+// Admin authentication middleware
+const authenticateAdmin = async (req: Request, res: Response, next: Function) => {
+  await authenticate(req, res, () => {
+    if (!req.user?.isAdmin) {
+      return res.status(403).json({ message: 'Admin access required' });
+    }
+    next();
+  });
+};
+
+// Helper function to format Zod validation errors
+const formatZodError = (error: ZodError) => {
+  return error.errors.map(err => ({
+    path: err.path.join('.'),
+    message: err.message
+  }));
+};
+
 // Configure multer for file uploads
 const upload = multer({
   dest: path.join(process.cwd(), 'uploads'),
