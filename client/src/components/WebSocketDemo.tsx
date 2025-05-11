@@ -165,11 +165,29 @@ export function WebSocketDemo() {
         </div>
       </CardContent>
       
-      <CardFooter className="text-sm text-gray-500">
-        <p>
-          Connection is {connectionStatus === 'open' ? 'established' : 'not established'} with the server.
-          {connectionStatus === 'reconnecting' && ' Attempting to reconnect...'}
-        </p>
+      <CardFooter className="text-sm">
+        {connectionStatus === 'open' ? (
+          <p className="text-green-600">
+            ✓ Connection established with the server
+          </p>
+        ) : connectionStatus === 'reconnecting' ? (
+          <p className="text-yellow-600">
+            ⟳ Attempting to reconnect to the server...
+          </p>
+        ) : connectionStatus === 'closed' ? (
+          <div className="w-full">
+            <p className="text-red-600 mb-2">
+              ✗ Connection to the server failed
+            </p>
+            <p className="text-gray-500 text-xs">
+              This is expected in the demo environment. In production, WebSockets would connect to a dedicated server.
+            </p>
+          </div>
+        ) : (
+          <p className="text-gray-500">
+            Connecting to the server...
+          </p>
+        )}
       </CardFooter>
     </Card>
   );

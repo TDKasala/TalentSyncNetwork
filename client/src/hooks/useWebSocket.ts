@@ -17,8 +17,8 @@ interface WebSocketHookResult {
 }
 
 export function useWebSocket({
-  reconnectInterval = 2000,
-  reconnectAttempts = 5,
+  reconnectInterval = 3000,
+  reconnectAttempts = 2, // Reduced to avoid too many errors in the console
   onOpen,
   onMessage,
   onClose,
@@ -34,8 +34,11 @@ export function useWebSocket({
 
   // Set up the WebSocket URL correctly for Replit environment
   const getWebSocketUrl = useCallback(() => {
+    // For Replit environment, we need to use the current host with the correct protocol
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const host = window.location.host;
+    
+    // Use the same host for the WebSocket connection with the specific /ws path
     const wsUrl = `${protocol}//${host}/ws`;
     console.log(`Connecting to WebSocket at: ${wsUrl}`);
     return wsUrl;

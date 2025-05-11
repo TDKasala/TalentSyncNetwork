@@ -71,9 +71,6 @@ export function SharedLayout({ children }: { children: React.ReactNode }) {
               <Link href="/jobs" className={`text-sm ${isActive("/jobs")}`}>
                 Jobs
               </Link>
-              <Link href="/skills" className={`text-sm ${isActive("/skills")}`}>
-                Skills
-              </Link>
               <Link href="/chat" className={`text-sm ${isActive("/chat")}`}>
                 Chat
               </Link>
@@ -179,12 +176,7 @@ export function SharedLayout({ children }: { children: React.ReactNode }) {
                       <span>Jobs</span>
                     </Link>
                   </SheetClose>
-                  <SheetClose asChild>
-                    <Link href="/skills" className="flex items-center gap-2 p-2">
-                      <Award size={20} />
-                      <span>Skills</span>
-                    </Link>
-                  </SheetClose>
+
                   <SheetClose asChild>
                     <Link href="/chat" className="flex items-center gap-2 p-2">
                       <MessageSquare size={20} />
